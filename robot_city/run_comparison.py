@@ -56,8 +56,8 @@ def evaluate_mode(lots: pd.DataFrame, mode: str) -> dict:
 def plot_breakdown(human: dict, robot: dict, path: str) -> None:
     fig, ax = plt.subplots(figsize=(7, 5))
     modes = [("human", human), ("robot", robot)]
-    channels = ["process", "services", "transport"]
-    colors = ["tab:gray", "tab:red", "tab:blue"]
+    channels = ["process", "services", "maintenance", "transport"]
+    colors = ["tab:gray", "tab:red", "tab:purple", "tab:blue"]
     for x, (name, res) in enumerate(modes):
         bd = res["env"].input_breakdown(res["assign"])
         bottom = 0.0

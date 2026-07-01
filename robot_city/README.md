@@ -27,18 +27,23 @@ are precisely the constraints that vanish when no one is inside.
 |---|---|---|
 | floor area per lot | zoning FAR cap (light/air) | structural cap (FAR 30) |
 | use districts | industry on M lots, hubs on C lots only | anywhere |
-| worker hubs | required, >= 2 cells from industry | none |
+| worker housing | sized from workforce x 600 sqft/person, >= 2 cells from industry | none |
 | amenity overhead | x1.45 gross/net floor | x1.0 |
+| capacity utilisation | 75% (shifts, breaks, holidays) | 95% (lights-out 24/7) |
+| upkeep | - | +10% of process input (spares, compute) |
 | binding limit | zoning | cooling: <= 12 MW per 3x3 block |
 
 Same production chain, same objective in both:
-`efficiency = output / (process input + building services + transport)`.
-Process input is identical per sqft in both modes (the machines do the same
-work); building services scale with GROSS floor (human mode pays the x1.45
-amenity overhead and the hubs) times an occupant factor of 1.5 (roughly a
-third of commercial building energy serves occupants - lighting, comfort
-HVAC - which a lights-out facility does not spend); transport is
-flow-weighted distance.
+`efficiency = output / (process + services + maintenance + transport)`.
+Process input is identical in both modes (the machines do the same work).
+Utilisation grosses up the floor that must physically exist (x1.33 human,
+x1.05 robot), which propagates into services, land take and feasibility.
+Services scale with gross physical floor times an occupant factor of 1.5 in
+human mode (roughly a third of commercial building energy serves occupants -
+lighting, comfort HVAC - which a lights-out facility does not spend).
+Worker housing is derived from the implied workforce, not a token constant.
+Maintenance is a robot-only penalty so the comparison cuts both ways.
+Transport is flow-weighted distance; human mode adds commute flows.
 
 ## Files
 
@@ -66,25 +71,30 @@ python breakeven.py          # reads rho, prints payback table
 
 ## Current result (sample lots, 5 seeds)
 
-| mode | best efficiency | process | services | transport |
-|---|---|---|---|---|
-| human constraints | 1.38 | 241 | 311 | 172 |
-| robot constraints | 2.09 | 241 | 121 | 117 |
-| **ratio rho** | **~1.51** | | | |
+| mode | best efficiency | process | services | maintenance | transport |
+|---|---|---|---|---|---|
+| human constraints | 0.91 | 241 | 612 | 0 | 242 |
+| robot constraints | 1.96 | 241 | 127 | 24 | 117 |
+| **ratio rho** | **~2.15** | | | | |
 
 Where the gap comes from (see `outputs/input_breakdown.png`): process input
-is identical by construction; the biggest single win is building services
-(-61%: no amenity overhead, no worker hubs, no occupant lighting/HVAC),
-then transport (-32%: denser placement once zoning and safety spacing are
-gone). Note rho is a lower bound - channels deliberately not counted yet
-include 24/7 utilisation (no shifts) and human idle/commute time.
+is identical by construction and robot upkeep is charged against the robot
+side, yet services dominate the gap (-79%): the human city must build 33%
+more floor for the same effective output (shift utilisation), gross it up
+45% for amenities, house its workforce on top, and light/heat it all for
+occupants. Transport follows (-52% including commute): denser placement
+once zoning and safety spacing are gone. The human city's efficiency drops
+below 1.0 - it spends more than it produces in these units - because it is
+carrying an entire support city on its back; that support burden, not the
+factory itself, is what a robot city deletes.
 
-The optimised layouts tell the story: the human city spreads (industry
-scattered across M lots, worker hubs pushed to safety distance), the robot
-city collapses into a tight stacked cluster until the cooling limit binds -
-the bottleneck moves from zoning law to thermodynamics.
+The optimised layouts tell the story: the human city pushes large worker-
+housing hubs to the safety perimeter (a dormitory-suburb ring, emerging
+from the optimiser rather than assumed), while the robot city collapses
+into a few stacked clusters until the cooling limit binds - the bottleneck
+moves from zoning law to thermodynamics.
 
-Break-even at rho = 1.51: NYC residents need ~$500bn/yr of net product;
+Break-even at rho = 2.15: NYC residents need ~$500bn/yr of net product;
 capital of ~$0.6-1.6tn (at $75k-300k per job automated) pays back in ~1-3
 years of liberated wages. The result is dominated by capital cost
 assumptions, not by rho - an honest finding: *whether* to build is an
@@ -93,8 +103,10 @@ economics question, *how well* it can run is the optimisation question.
 ## Honest limitations / next steps
 
 - Sample lots stand in for real PLUTO until the CSV is downloaded; the
-  parameters (overhead factor, cooling cap, power density) are order-of-
-  magnitude engineering values, not calibrated.
+  parameters (overhead factor, utilisation rates, floor-per-worker, cooling
+  cap, power density, maintenance fraction) are order-of-magnitude
+  engineering values with cited anchors, not calibrated fits - rho should
+  be read as "roughly 2x", not "2.15".
 - Optimisers are classical; the planned contribution is an RL policy
   (PPO + GNN over the lot graph) benchmarked against these baselines.
 - Single objective (transport efficiency); the multi-objective version
