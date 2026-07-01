@@ -4,6 +4,7 @@ robot constraints and measure the efficiency gap.
 Outputs:
 - outputs/comparison.csv        per-mode/per-method efficiencies
 - outputs/layouts.png           best human vs robot layout side by side
+- outputs/input_breakdown.png   where each city spends resources
 - outputs/efficiency_ratio.txt  the single number chapter 2 needs (rho)
 """
 
@@ -50,6 +51,28 @@ def evaluate_mode(lots: pd.DataFrame, mode: str) -> dict:
                 best_assign, best_env, best_eff = a, env, eff
     return {"rows": rows, "assign": best_assign, "env": best_env,
             "eff": best_eff}
+
+
+def plot_breakdown(human: dict, robot: dict, path: str) -> None:
+    fig, ax = plt.subplots(figsize=(7, 5))
+    modes = [("human", human), ("robot", robot)]
+    channels = ["process", "services", "transport"]
+    colors = ["tab:gray", "tab:red", "tab:blue"]
+    for x, (name, res) in enumerate(modes):
+        bd = res["env"].input_breakdown(res["assign"])
+        bottom = 0.0
+        for ch, color in zip(channels, colors):
+            ax.bar(x, bd[ch], bottom=bottom, color=color,
+                   label=ch if x == 0 else None)
+            bottom += bd[ch]
+        ax.text(x, bottom + 8, f"eff {res['eff']:.2f}", ha="center")
+    ax.set_xticks([0, 1])
+    ax.set_xticklabels([f"{m} constraints" for m, _ in modes])
+    ax.set_ylabel("resource input (units/yr)")
+    ax.set_title("Same output - where each city spends resources")
+    ax.legend()
+    fig.tight_layout()
+    fig.savefig(path, dpi=130)
 
 
 def plot_layouts(human: dict, robot: dict, path: str) -> None:
@@ -99,9 +122,15 @@ def main() -> None:
     print(f"best robot efficiency : {robot['eff']:.4f}")
     print(f"efficiency ratio rho  : {rho:.3f}")
 
+    for name, res in (("human", human), ("robot", robot)):
+        bd = res["env"].input_breakdown(res["assign"])
+        print(f"{name} inputs: " + ", ".join(
+            f"{k}={v:.0f}" for k, v in bd.items()))
+
     plot_layouts(human, robot, "outputs/layouts.png")
+    plot_breakdown(human, robot, "outputs/input_breakdown.png")
     print("wrote outputs/comparison.csv, outputs/layouts.png,"
-          " outputs/efficiency_ratio.txt")
+          " outputs/input_breakdown.png, outputs/efficiency_ratio.txt")
 
 
 if __name__ == "__main__":

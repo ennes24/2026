@@ -13,9 +13,18 @@ One environment, two constraint modes:
   becomes heat: total equipment power in any 3x3 neighbourhood must stay
   under a district-cooling limit.
 
-Efficiency = OUTPUT / (BASE_INPUT + BETA * weighted transport distance).
+Efficiency = OUTPUT / (process input + building services + transport).
 OUTPUT is identical across modes (same production chain), so the ratio of
 optimised efficiencies isolates what removing human constraints buys.
+The three input channels:
+- process input: proportional to net process floor, identical per sqft in
+  both modes (the machines do the same work either way)
+- building services: proportional to GROSS floor (human mode carries the
+  x1.45 amenity overhead and the worker hubs), multiplied in human mode by
+  an occupant factor for lighting and comfort HVAC - per CBECS roughly a
+  third of commercial building energy serves occupants, which a lights-out
+  facility does not spend
+- transport: flow-weighted distance, as before
 """
 
 from dataclasses import dataclass, field
@@ -24,9 +33,11 @@ import numpy as np
 import pandas as pd
 
 # --- production chain (identical in both modes) ---------------------------
-OUTPUT_UNITS = 1000.0   # abstract units produced when the chain is placed
-BASE_INPUT = 300.0      # resources consumed by production itself
-BETA = 1.0              # resources lost per unit of flow-weighted distance
+OUTPUT_UNITS = 1000.0      # abstract units produced when the chain is placed
+PROCESS_INTENSITY = 1.0    # input per 1,000 sqft of net process floor
+SERVICE_INTENSITY = 0.5    # building-services input per 1,000 sqft gross
+OCCUPANT_FACTOR = 1.5      # occupied buildings spend ~1/3 more on people
+BETA = 1.0                 # resources lost per unit flow-weighted distance
 
 # --- human-mode parameters -------------------------------------------------
 AMENITY_OVERHEAD = 1.45  # gross/net floor factor for occupied buildings
@@ -147,8 +158,19 @@ class CityEnv:
             for i, j, w in self.flows
         ))
 
+    def input_breakdown(self, assign: np.ndarray) -> dict:
+        net_process = sum(f.floor_sqft for f in self.facilities
+                          if f.kind == "industrial")
+        gross_total = sum(self.gross_floor(f) for f in self.facilities)
+        occ = OCCUPANT_FACTOR if self.mode == "human" else 1.0
+        return {
+            "process": PROCESS_INTENSITY * net_process / 1000,
+            "services": SERVICE_INTENSITY * gross_total / 1000 * occ,
+            "transport": BETA * self.transport(assign),
+        }
+
     def efficiency(self, assign: np.ndarray) -> float:
-        return OUTPUT_UNITS / (BASE_INPUT + BETA * self.transport(assign))
+        return OUTPUT_UNITS / sum(self.input_breakdown(assign).values())
 
     def random_assignment(self, rng, max_tries: int = 200) -> np.ndarray:
         """Constructive sampling: place facilities one by one on cells with
