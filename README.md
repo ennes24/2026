@@ -35,6 +35,18 @@
 
 합성 데이터는 작물별 농학적 특성(최적 생육 온도, 가뭄 민감도, 작물별 물 소요량 등)을 반영해 통계적으로 현실적인 기후↔수확량 관계를 만들도록 설계했다 (`src/generate_synthetic_data.py`의 `CROP_PARAMS`, `STATE_PROFILES` 참고). **실제 데이터로 교체하려면** `data/raw/` 아래 동일한 컬럼명의 CSV로 갈아끼우기만 하면 `data_loader.py` 이후 파이프라인은 그대로 동작한다.
 
+**실제 데이터 받아오기**: `src/fetch_real_data.py`가 USDA NASS Quick Stats / NOAA NCEI / US Drought Monitor / USGS Water Use API를 직접 호출해 위 5개 CSV를 실제 데이터로 채워준다. USDA NASS와 NOAA NCEI는 무료 API 키가 필요하다 (각각 https://quickstats.nass.usda.gov/api , https://www.ncdc.noaa.gov/cdo-web/token 에서 이메일만 입력하면 즉시 발급). 발급받은 값은 레포 루트의 `.env` 파일(git-ignored)에 다음과 같이 넣는다.
+
+```
+USDA_NASS_API_KEY=...
+NOAA_NCEI_TOKEN=...
+```
+
+```bash
+pip install -r requirements.txt
+python -m src.fetch_real_data
+```
+
 | 데이터 | 용도 | 단계 | 출처 (실 데이터 기준) |
 | --- | --- | --- | --- |
 | `usda_nass_yield.csv` | 작물별 수확량 | 1·2 공용 | https://quickstats.nass.usda.gov/ |
