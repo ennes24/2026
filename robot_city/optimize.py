@@ -39,7 +39,7 @@ def greedy(env: CityEnv, seed: int = 0, passes: int = 3) -> np.ndarray:
     assign = env.random_assignment(rng)
     for _ in range(passes):
         for fi in order:
-            best_cell, best_cost = assign[fi], env.transport(assign)
+            best_cell, best_eff = assign[fi], env.efficiency(assign)
             allowed = np.flatnonzero(env.zone_ok[env.facilities[fi].kind])
             for cell in allowed:
                 if cell == assign[fi]:
@@ -48,18 +48,24 @@ def greedy(env: CityEnv, seed: int = 0, passes: int = 3) -> np.ndarray:
                 trial[fi] = cell
                 if not env.feasible(trial):
                     continue
-                cost = env.transport(trial)
-                if cost < best_cost:
-                    best_cell, best_cost = cell, cost
+                eff = env.efficiency(trial)
+                if eff > best_eff:
+                    best_cell, best_eff = cell, eff
             assign[fi] = best_cell
     return assign
 
 
 def anneal(env: CityEnv, iters: int = 6000, seed: int = 0,
            t0: float = 30.0, t1: float = 0.1) -> np.ndarray:
+    """Maximises efficiency; cost is scaled so temperatures stay meaningful
+    (efficiency differences per move are ~1e-3)."""
     rng = np.random.default_rng(seed)
+
+    def cost_of(a):
+        return -1000.0 * env.efficiency(a)
+
     cur = env.random_assignment(rng)
-    cur_cost = env.transport(cur)
+    cur_cost = cost_of(cur)
     best, best_cost = cur.copy(), cur_cost
     for step in range(iters):
         temp = t0 * (t1 / t0) ** (step / iters)
@@ -69,7 +75,7 @@ def anneal(env: CityEnv, iters: int = 6000, seed: int = 0,
         cand[fi] = rng.choice(allowed)
         if not env.feasible(cand):
             continue
-        cost = env.transport(cand)
+        cost = cost_of(cand)
         if cost < cur_cost or rng.random() < np.exp((cur_cost - cost) / temp):
             cur, cur_cost = cand, cost
             if cost < best_cost:

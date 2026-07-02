@@ -34,6 +34,16 @@ Input channels:
 - maintenance (robot only): robots are not free - upkeep, spares and
   compute add a fraction on top of process input
 - transport: flow-weighted distance, as before (human mode adds commute)
+
+Output is NOT fixed: it carries an agglomeration term, because interaction
+- not floor space - is why cities are productive (Bettencourt/West
+superlinear scaling). Human interaction requires physical proximity (
+face-to-face knowledge spillovers decay over a few blocks), so the human
+city wants density that its own zoning and safety rules deny it. Robot
+interaction happens at network speed with fleet learning, so robots
+capture the full agglomeration bonus at any layout. This asymmetry is the
+model's answer to "can robots interacting like humans out-produce the
+human city, not just run cheaper".
 """
 
 from dataclasses import dataclass, field
@@ -42,7 +52,9 @@ import numpy as np
 import pandas as pd
 
 # --- production chain (identical in both modes) ---------------------------
-OUTPUT_UNITS = 1000.0      # abstract units produced when the chain is placed
+BASE_OUTPUT = 1000.0       # output with zero agglomeration benefit
+AGGLOM_GAIN = 0.8          # max output uplift from perfect interaction
+LAMBDA_FACE = 3.0          # face-to-face spillover decay length (cells)
 PROCESS_INTENSITY = 1.0    # input per 1,000 sqft of EFFECTIVE process floor
 SERVICE_INTENSITY = 0.5    # building-services input per 1,000 sqft gross
 OCCUPANT_FACTOR = 1.5      # occupied buildings spend ~1/3 more on people
@@ -201,8 +213,30 @@ class CityEnv:
             "transport": BETA * self.transport(assign),
         }
 
+    def interaction(self, assign: np.ndarray) -> float:
+        """Mean pairwise interaction strength across industrial nodes, in
+        [0, 1]. Human mode: knowledge spillovers decay with distance
+        (gravity form). Robot mode: network-speed communication and fleet
+        learning make interaction distance-free."""
+        if self.mode == "robot":
+            return 1.0
+        idx = [i for i, f in enumerate(self.facilities)
+               if f.kind == "industrial"]
+        pos = self.rc[assign]
+        total, pairs = 0.0, 0
+        for a in range(len(idx)):
+            for b in range(a + 1, len(idx)):
+                d = (abs(pos[idx[a]][0] - pos[idx[b]][0])
+                     + abs(pos[idx[a]][1] - pos[idx[b]][1]))
+                total += np.exp(-d / LAMBDA_FACE)
+                pairs += 1
+        return total / pairs
+
+    def output(self, assign: np.ndarray) -> float:
+        return BASE_OUTPUT * (1 + AGGLOM_GAIN * self.interaction(assign))
+
     def efficiency(self, assign: np.ndarray) -> float:
-        return OUTPUT_UNITS / sum(self.input_breakdown(assign).values())
+        return self.output(assign) / sum(self.input_breakdown(assign).values())
 
     def random_assignment(self, rng, max_tries: int = 200) -> np.ndarray:
         """Constructive sampling: place facilities one by one on cells with

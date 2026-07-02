@@ -46,7 +46,9 @@ def evaluate_mode(lots: pd.DataFrame, mode: str) -> dict:
         for method, a in (("random", rnd), ("greedy", grd), ("anneal", ann)):
             eff = env.efficiency(a)
             rows.append({"mode": mode, "method": method, "seed": seed,
-                         "transport": env.transport(a), "efficiency": eff})
+                         "transport": env.transport(a),
+                         "interaction": env.interaction(a),
+                         "output": env.output(a), "efficiency": eff})
             if method != "random" and eff > best_eff:
                 best_assign, best_env, best_eff = a, env, eff
     return {"rows": rows, "assign": best_assign, "env": best_env,
@@ -118,9 +120,16 @@ def main() -> None:
     rho = robot["eff"] / human["eff"]
     with open("outputs/efficiency_ratio.txt", "w") as fh:
         fh.write(f"{rho:.4f}\n")
-    print(f"\nbest human efficiency : {human['eff']:.4f}")
-    print(f"best robot efficiency : {robot['eff']:.4f}")
+    out_h = human["env"].output(human["assign"])
+    out_r = robot["env"].output(robot["assign"])
+    print(f"\nbest human efficiency : {human['eff']:.4f}"
+          f"  (output {out_h:.0f}, interaction "
+          f"{human['env'].interaction(human['assign']):.2f})")
+    print(f"best robot efficiency : {robot['eff']:.4f}"
+          f"  (output {out_r:.0f}, interaction 1.00)")
     print(f"efficiency ratio rho  : {rho:.3f}")
+    print(f"output ratio          : {out_r / out_h:.3f}"
+          " (>1 means robots out-produce, not just run cheaper)")
 
     for name, res in (("human", human), ("robot", robot)):
         bd = res["env"].input_breakdown(res["assign"])
