@@ -57,6 +57,8 @@ python -m src.fetch_real_data
 
 대상 범위: 12개 주요 곡물 생산 주(IA, IL, NE, MN, IN, KS, OH, SD, MO, ND, WI, TX) × 2000–2023년 × 3개 작물(옥수수·대두·밀).
 
+> **현재 데이터 상태**: `data/raw/drought_monitor.csv`만 US Drought Monitor 실측 데이터(주간 D0–D4 area% 실측치를 연 단위로 집계, 2000년만 표본이 1주뿐이라 2001년 값으로 backfill)로 교체되어 있다. 나머지 4개(`usda_nass_yield.csv`, `noaa_climate.csv`, `cropland_data_layer.csv`, `usgs_water_use.csv`)는 여전히 합성 데이터다. **이 둘을 섞으면 학습 결과가 왜곡된다** — 합성 수확량은 합성 가뭄지수로부터 생성됐기 때문에, 실제 가뭄지수를 끼워 넣으면 그 인위적 상관관계가 깨져 `outputs/model_comparison.csv`의 R²가 하락한다 (특히 corn/soybean이 음수). 5개 소스를 전부 실제 데이터로 바꾸기 전까지는 `outputs/`의 수치를 실제 성능으로 해석하지 말 것.
+
 ---
 
 ## 1단계: 작물 생산량 예측 (ML)
