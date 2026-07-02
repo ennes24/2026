@@ -176,18 +176,28 @@ def fetch_noaa_climate(token: str) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 def fetch_drought_monitor() -> pd.DataFrame:
     url = "https://usdmdataservices.unl.edu/api/StateStatistics/GetDroughtSeverityStatisticsByAreaPercent"
+    headers = {"Accept": "application/json", "User-Agent": "Mozilla/5.0"}
     rows = []
     for state in STATES:
         for year in range(START_YEAR, END_YEAR + 1):
             params = {
                 "aoi": state,
-                "startdate": f"1/1/{year}",
+                "startdate": f"01/01/{year}",
                 "enddate": f"12/31/{year}",
                 "statisticsType": 1,
             }
-            resp = requests.get(url, params=params, timeout=60)
+            resp = requests.get(url, params=params, headers=headers, timeout=60)
             resp.raise_for_status()
-            weeks = resp.json()
+            try:
+                weeks = resp.json()
+            except ValueError as exc:
+                raise RuntimeError(
+                    f"Drought Monitor API did not return JSON for state={state} year={year}.\n"
+                    f"URL requested: {resp.url}\n"
+                    f"HTTP status: {resp.status_code}\n"
+                    f"Response body (first 500 chars): {resp.text[:500]!r}\n"
+                    f"-> Paste this whole message back so the endpoint/params can be fixed."
+                ) from exc
             if not weeks:
                 continue
             # Weighted index on a 0-4 scale: D0..D4 area% -> category midpoints.
@@ -250,23 +260,34 @@ def main():
 
     RAW_DIR.mkdir(parents=True, exist_ok=True)
 
-    print("[1/5] USDA NASS yield...")
-    fetch_nass_yield(nass_key).to_csv(RAW_DIR / "usda_nass_yield.csv", index=False)
+    steps = [
+        ("[1/5] USDA NASS yield", lambda: fetch_nass_yield(nass_key), "usda_nass_yield.csv"),
+        ("[2/5] USDA NASS cropland acreage (Census years, interpolated)",
+         lambda: fetch_nass_cropland(nass_key), "cropland_data_layer.csv"),
+        ("[3/5] NOAA NCEI climate (slow: ~288 requests, rate-limited)",
+         lambda: fetch_noaa_climate(noaa_token), "noaa_climate.csv"),
+        ("[4/5] US Drought Monitor", fetch_drought_monitor, "drought_monitor.csv"),
+        ("[5/5] USGS water use (Census years, interpolated)",
+         fetch_usgs_water_use, "usgs_water_use.csv"),
+    ]
 
-    print("[2/5] USDA NASS cropland acreage (Census years, interpolated)...")
-    fetch_nass_cropland(nass_key).to_csv(RAW_DIR / "cropland_data_layer.csv", index=False)
+    failed = []
+    for label, fetch_fn, out_name in steps:
+        print(f"{label}...")
+        out_path = RAW_DIR / out_name
+        try:
+            fetch_fn().to_csv(out_path, index=False)
+            print(f"  -> saved {out_path}")
+        except Exception as exc:  # noqa: BLE001 -- surface any source's failure, keep going
+            print(f"  !! FAILED: {exc}\n")
+            failed.append(out_name)
 
-    print("[3/5] NOAA NCEI climate (this one is slow: ~288 requests, rate-limited)...")
-    fetch_noaa_climate(noaa_token).to_csv(RAW_DIR / "noaa_climate.csv", index=False)
-
-    print("[4/5] US Drought Monitor...")
-    fetch_drought_monitor().to_csv(RAW_DIR / "drought_monitor.csv", index=False)
-
-    print("[5/5] USGS water use (Census years, interpolated)...")
-    fetch_usgs_water_use().to_csv(RAW_DIR / "usgs_water_use.csv", index=False)
-
-    print("Done. Real data written to data/raw/, replacing the synthetic stand-ins.")
-    print("Next: rm -rf data/processed/outputs && python -m src.run_pipeline")
+    if failed:
+        print(f"\nDone with errors. These files were NOT updated (synthetic data, if any, is still there): {failed}")
+        print("Paste the error message(s) above back to fix the affected fetcher(s), then re-run this script.")
+    else:
+        print("\nAll 5 sources fetched successfully.")
+    print("Next (once all 5 succeed): rmdir /s /q data\\processed  &&  rmdir /s /q outputs  &&  python -m src.run_pipeline")
 
 
 if __name__ == "__main__":
