@@ -50,15 +50,27 @@
 - **파일명**: `nass_livestock.csv`
 - 두당 옥수수 소요량 계수는 웹조사(사료 배합 문헌값)로 별도 확보
 
-### ⬜ 6. RIN 이월 재고 K [웹조사]
+### ⬜ 6. RIN 이월 재고 K [웹조사 — 문헌 확정됨]
 - **역할**: LP 제약 (1) — "면제 실효성" 논쟁의 핵심 변수
-- **출처**: EPA EMTS 공개 통계, farmdoc daily(일리노이대) 2012-13년 분석 글에 추정치
-  존재 (2012년 이월 ~2.6B gal 등). 연도별 표가 어려우면 2012년 값 + 감도분석 범위만.
+- **핵심 인용**:
+  - Tyner, Taheripour & Hurt (2012), "Potential Impacts of a Partial Waiver of the
+    Ethanol Blending Rules" (Purdue) — 2012년 이월 RIN ~2.5-2.6B gal ≈ 옥수수 9억 bu
+    상당, 면제 효과 $0.47~$1.30/bu (조건부)라는 실수치와 메커니즘의 원조
+  - Irwin & Good, "An Update on RIN Stocks..." farmdoc daily (2012) 및 후속 시리즈 —
+    연도별 RIN 재고 추정의 표준 공개 소스
+    https://farmdocdaily.illinois.edu/2012/08/an-update-on-rin-stocks-and-im.html
 
-### ⬜ 7. 수요탄력성 ε (사료·수출·식품 부문별) [웹조사 — 문헌값]
+### ⬜ 7. 수요탄력성 ε (사료·수출·식품 부문별) [웹조사 — 문헌 확정됨]
 - **역할**: 목적함수 λ 보정, 바깥층 SC(X) 가격충격 계산
-- **출처**: Carter, Rausser & Smith (2016), EPA "Impacts of Ethanol Policy on Corn
-  Prices" 리뷰, 퍼듀 Tyner et al. — 논문에 부문별 추정치 표가 있음. 값+출처만 정리.
+- **핵심 인용**: Roberts & Schlenker (2013), "Identifying Supply and Demand
+  Elasticities of Agricultural Commodities: Implications for the US Ethanol Mandate",
+  *American Economic Review* 103(6):2265-95 — 에탄올 의무제 평가 목적으로 추정된
+  곡물 수요·공급 탄력성 (의무제의 가격효과 ~20%, CI 14-35%도 검증 기준값으로 사용).
+  무료 PDF: https://www.nber.org/system/files/working_papers/w15921/w15921.pdf
+- **보조**: EPA "Impacts of Ethanol Policy on Corn Prices: A Review" (부문별 추정치
+  모음), Carter, Rausser & Smith (~40% 강효과 진영 — 감도분석 상한 시나리오),
+  Frontiers in Energy Research (2022) RFS ex-post 평가 리뷰 (2012 백테스트 장에서
+  "기존 연구는 전부 사후분석" 주장의 근거로도 인용)
 
 ## 우선순위 P2 — 개선·확장용 (없어도 1차 결과 가능)
 
