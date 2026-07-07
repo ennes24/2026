@@ -73,21 +73,41 @@
   "기존 연구는 전부 사후분석" 주장의 근거로도 인용)
 
 ### 📌 백테스트 직접 비교 대상: UNL 연구 (가장 가까운 선행연구)
-- Dhoubhadel, Stockton & Azzam, "The Impact of Biofuels Policy and Drought on the
-  U.S. Grain and Livestock Markets", *Journal of Agricultural and Applied Economics*
-  — **"2012년 RFS를 23% 감축했으면 가뭄의 옥수수 가격 충격을 완전 상쇄"**라는 사후
-  추정. 우리 모델이 2012 백테스트에서 내는 X*를 이 23%와 직접 비교한다.
-  우리와의 차이(=우리 기여): 사후 vs 사전 예측 기반, 전국 단수치 vs 주별 배분,
+- Dhoubhadel, Azzam & Stockton (2015), "The Impact of Biofuels Policy and Drought on
+  the U.S. Grain and Livestock Markets", *Journal of Agricultural and Applied
+  Economics* 47(1) — **"의무량 23% 면제 = 에탄올 소비 13.7% 감소가 2012 가뭄의
+  옥수수 가격 충격을 완전 상쇄"**라는 사후 추정. 우리 모델의 2012 백테스트 X*를
+  이 23%와 직접 비교한다.
+- **검증 결과 (3차 교차확인 완료)**: 이 논문은 비교 기준 이상의 가치가 있음 —
+  방법론이 **확률적 균형변위모형(EDM)**이라 소·돼지·닭 + 옥수수·DDG·대두·에탄올
+  시장의 **탄력성 표가 논문 안에 통째로 들어있다**. 우리 ε·λ 파라미터의 부문별
+  값을 이 표에서 그대로 인용 가능 (Roberts & Schlenker의 총량 탄력성을 부문별로
+  쪼갤 때 사용). "23% (의무량 기준) vs 13.7% (소비량 기준)" 구분도 우리 X의 정의를
+  명확히 하는 데 중요.
+- 무료 전문: AgEcon Search https://ageconsearch.umn.edu/record/348937
+- 우리와의 차이(=우리 기여): 사후 vs 사전 예측 기반, 전국 단수치 vs 주별 배분,
   1개 연도 vs 심각도별 곡선.
-  https://www.cambridge.org/core/journals/journal-of-agricultural-and-applied-economics/article/C634F113115722FBC306A710C9668587
 
 ### 상충 연구 4진영 정리 (감도분석의 시나리오 축)
 | 진영 | 주장 | 우리 모델에서의 위치 |
 |---|---|---|
-| Carter, Rausser & Smith | 의무제 가격효과 ~40% (강효과) | 탄력성 하한(효과 큼) 시나리오 |
-| Roberts & Schlenker (AER) | ~20% (CI 14-35%) | 기본(중앙) 시나리오 |
+| Carter, Rausser & Smith | 의무제 가격효과 ~30-40% (강효과; 정확값은 원문에서 전사) | 탄력성 하한(효과 큼) 시나리오 |
+| Roberts & Schlenker (AER) | 20% (재활용 1/3 가정, CI 14-35%; 미재활용 시 30%) | 기본(중앙) 시나리오 |
 | 퍼듀 Tyner et al. | RIN 재고 크면 면제 실효 없음 (조건부) | K(RIN) 파라미터 상한 시나리오 |
 | UNL Dhoubhadel et al. | 23% 감축이면 2012 충격 완전 상쇄 | 백테스트 X* 직접 비교 기준 |
+
+### 검증 메모 (3차 교차확인, 2026-07 기준)
+각 논문에서 실제로 추출 가능한 것 확인 완료:
+- **Roberts & Schlenker**: 의무제 가격효과 20%/30% (CI 14-35%), 소비자잉여 -$155B/년,
+  4대 곡물(옥수수·쌀·대두·밀) 칼로리 총량 기준. 탄력성 점추정치 표는 본문에 있음 —
+  NBER 무료 PDF를 로컬에서 받아 표만 전사할 것 (샌드박스에서 PDF 직접 접근은 차단됨).
+- **퍼듀 Tyner et al.**: RIN 유연성 2B gal → 옥수수 -$0.67/bu, 소면제 -$0.47/bu,
+  대면제 최대 -$1.30/bu (시장 조건별 시나리오 표 존재). 무료 PDF 미러 존재.
+- **UNL Dhoubhadel et al.**: 위 박스 참고 — EDM 탄력성 표 포함, 무료 전문.
+- **추가 발견**: Babcock (Iowa State CARD) 12-PB8 "Updated Assessment of the
+  Drought's Impacts on Crop Prices and Biofuel Production" (2012) — 가뭄 진행 중
+  실시간으로 쓰인 정책 브리프. 백테스트 장에서 "당시 이용 가능했던 분석" 비교
+  대상으로 인용 가치. https://ideas.repec.org/p/ias/cpaper/12-pb8.html
 
 ## 우선순위 P2 — 개선·확장용 (없어도 1차 결과 가능)
 
