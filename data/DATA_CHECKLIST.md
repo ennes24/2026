@@ -72,6 +72,23 @@
   Frontiers in Energy Research (2022) RFS ex-post 평가 리뷰 (2012 백테스트 장에서
   "기존 연구는 전부 사후분석" 주장의 근거로도 인용)
 
+### 📌 백테스트 직접 비교 대상: UNL 연구 (가장 가까운 선행연구)
+- Dhoubhadel, Stockton & Azzam, "The Impact of Biofuels Policy and Drought on the
+  U.S. Grain and Livestock Markets", *Journal of Agricultural and Applied Economics*
+  — **"2012년 RFS를 23% 감축했으면 가뭄의 옥수수 가격 충격을 완전 상쇄"**라는 사후
+  추정. 우리 모델이 2012 백테스트에서 내는 X*를 이 23%와 직접 비교한다.
+  우리와의 차이(=우리 기여): 사후 vs 사전 예측 기반, 전국 단수치 vs 주별 배분,
+  1개 연도 vs 심각도별 곡선.
+  https://www.cambridge.org/core/journals/journal-of-agricultural-and-applied-economics/article/C634F113115722FBC306A710C9668587
+
+### 상충 연구 4진영 정리 (감도분석의 시나리오 축)
+| 진영 | 주장 | 우리 모델에서의 위치 |
+|---|---|---|
+| Carter, Rausser & Smith | 의무제 가격효과 ~40% (강효과) | 탄력성 하한(효과 큼) 시나리오 |
+| Roberts & Schlenker (AER) | ~20% (CI 14-35%) | 기본(중앙) 시나리오 |
+| 퍼듀 Tyner et al. | RIN 재고 크면 면제 실효 없음 (조건부) | K(RIN) 파라미터 상한 시나리오 |
+| UNL Dhoubhadel et al. | 23% 감축이면 2012 충격 완전 상쇄 | 백테스트 X* 직접 비교 기준 |
+
 ## 우선순위 P2 — 개선·확장용 (없어도 1차 결과 가능)
 
 ### ⬜ 8. 생육기 기온·강수 [다운로드]
