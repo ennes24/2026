@@ -45,8 +45,34 @@ model. Headline numbers: output ratio 1.36, rho ~2.9 on sample lots.
 **Deliverable:** calibrated results section + sensitivity figures. This
 alone is a defensible mini-paper if everything later slips.
 
+## What to reuse instead of building (start here, month 3)
+
+Nobody has published the human-vs-robot constraint comparison or the
+agglomeration asymmetry - that gap is this thesis's novelty. But every
+piece of machinery exists and is open source; adapt, don't rewrite:
+
+- **DRL-urban-planning** (tsinghua-fib-lab, Nature Computational Science
+  2023): the closest existing system - sequential spatial planning of
+  land use on a city graph with a GNN policy and PPO, code and scenarios
+  released. It optimises human livability (service accessibility,
+  greenness); we flip the objective to robot efficiency and add the
+  constraint-mode comparison. Reuse: environment structure, GNN encoder,
+  training loop. Primary base for phases 2-3.
+- **circuit_training / AlphaChip** (google-research, Apache 2.0, with
+  pre-trained checkpoints): the sequential-placement RL reference; heavier
+  infrastructure, use as methodological citation and fallback.
+- **gym-flp** (Operations Research Forum 2024): Gym environments for
+  facility layout problems - near drop-in for our placement MDP.
+- **QAPLIB**: our placement problem is a quadratic-assignment variant;
+  instances with known optima give RQ2 an external benchmark.
+- **pymoo** (NSGA-II) and **sb3-contrib** (MaskablePPO): baselines and
+  learner, both off the shelf.
+
 ## Phase 2 - RL enters (months 3-5)
 
+0. Clone DRL-urban-planning and gym-flp; reproduce one of their published
+   runs first, then port our two-constraint objective into whichever
+   fits better, rather than wiring PPO from scratch.
 1. Wrap `CityEnv` as a Gymnasium environment: sequential placement MDP
    (state = partial layout + remaining facilities; action = choose a lot;
    action masking = zoning/capacity/cooling feasibility; terminal reward
