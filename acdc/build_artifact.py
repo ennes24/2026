@@ -113,6 +113,14 @@ footer{{margin-top:60px;padding-top:20px;border-top:1px solid var(--line);color:
 <p>변동성 최대는 <strong>사우스다코타</strong>, 최소는 <strong>네브래스카</strong>. NE가
 안정적인 건 관개 비율이 높기 때문 — 데이터에 관개 컬럼이 없어도 변동성 지도가 그 구조를 드러낸다.</p>
 {figure("04_state_vulnerability.png","주별 수확량 기상충격의 표준편차(추세 대비 %).")}
+<h3>극한고온(EDD) 타임라인 — 고온해가 흉작과 정렬</h3>
+<p>온도가 들어온 뒤에야 보이는 관계. 연도별 극한고온(EDD) 막대와 옥수수 편차를 겹치면
+<strong>2012·1988 고온해가 흉작과 정확히 정렬</strong>한다 — 고온이 흉작의 방아쇠다.</p>
+{figure("13_edd_timeline.png","연도별 EDD(막대)와 옥수수 수확량 편차(선). 2012·1988에서 고온↑·수확↓.")}
+<h3>옥수수는 대두보다 고온에 약하다</h3>
+<p>같은 EDD 구간에서 <strong>옥수수의 %손실 기울기가 대두보다 가파르다</strong>. 왜 2012에
+옥수수만 무너지고 대두는 버텼는지가 여기서 설명된다.</p>
+{figure("15_heat_sensitivity.png","EDD 대 추세대비 %손실. 옥수수(주황)가 대두(녹색)보다 가파르게 감소.")}
 
 <h2><span class="n">03</span>머신러닝 — 무엇을 근거로 예측하나</h2>
 <p>입력: 생육기 강수 + <strong>온도(극한고온 EDD·유익열 GDD)</strong> + 토양 + 연도 + 주.
@@ -192,6 +200,33 @@ footer{{margin-top:60px;padding-top:20px;border-top:1px solid var(--line);color:
 수치가 나온다. 가뭄 단독(−1.3%)이 작아 보이는 건, 모델이 흉작 원인을 대부분 <strong>동반되는
 고온(EDD)</strong>에 귀속시키기 때문 — 현실적 기후변화는 <strong>온난화+가뭄 복합</strong>이다.</p>
 </div>
+
+<h2><span class="n">07</span>2단계 최적화 — 전환비용을 감안한 배치</h2>
+<p>1단계 예측 수확량을 <strong>목적함수 계수</strong>로 넣어 각 카운티 땅을 옥수수 vs 대두로
+배분(PuLP LP). 요청하신 <strong>전환비용 패널티</strong>를 그대로 구현: 현 배치에서 많이
+벗어날수록 벌점 <code>λ·|x−x0|</code>. 무게(톤) 대신 <strong>수익($)</strong>으로 비교해야
+트레이드오프가 산다(대두가 톤당 값 2배↑).</p>
+<table>
+<thead><tr><th>λ (전환비용)</th><th>평균 재배치</th><th>수익 증가</th></tr></thead>
+<tbody>
+<tr><td>0 (이론최적)</td><td>45%</td><td>+9.2%</td></tr>
+<tr><td>100</td><td>36%</td><td>+8.4%</td></tr>
+<tr><td>150 (무릎)</td><td style="color:var(--green)">18%</td><td style="color:var(--green)">+4.9%</td></tr>
+<tr><td>250</td><td>0.4%</td><td>+0.15%</td></tr>
+</tbody>
+</table>
+{figure("17_transition_tradeoff.png","전환비용 트레이드오프. 무릎(λ=150)에서 적은 재배치로 이득 대부분 확보.")}
+{figure("18_alloc_shift_by_state.png","λ=150에서 주별 권고 방향: +옥수수(주황) / +대두(녹색).")}
+<div class="callout ok">
+<div class="tag">핵심 — 이론최적 vs 전환비용 감안</div>
+<p style="margin:.4em 0"><strong>λ=0</strong>은 카운티당 45%를 갈아엎어야 +9.2%(비현실적 상한).
+<strong>λ=150(무릎)</strong>은 <strong>재배치를 18%로 줄여도 이득의 절반(+4.9%)</strong>을
+얻는다. 여기서 더 짜내면 churn만 급증 — "조금만 바꿔도 이득 대부분"이라는 현실적 권고점.
+λ만 바꾸면 의사결정자의 '얼마나 급진적으로 바꿀까' 성향을 반영할 수 있다.</p>
+</div>
+<p class="note">한계: ACDC에 카운티 경작면적이 없어 땅=카운티당 1단위 가정, x0는 과거 수익
+비율로 근사. 따라서 gain%의 절대크기보다 <strong>곡선의 모양</strong>이 결론. NASS 면적을
+붙이면 절대량까지 신뢰 가능(egress 차단으로 이번 세션엔 미확보).</p>
 
 <footer>
 데이터: ACDC (Purdue PURR, CC-BY), 1981–2015 · 대상: Corn Belt 12개 주 · 피처: 강수·토양·
