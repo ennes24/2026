@@ -75,11 +75,11 @@ footer{{margin-top:60px;padding-top:20px;border-top:1px solid var(--line);color:
 
 <div class="wrap">
 <header class="hero">
-  <div class="eyebrow">ACDC · Corn Belt · 1981–2015</div>
-  <h1>옥수수 수확량: 온도를 넣으니 데이터가 달라졌다</h1>
-  <p class="sub">카운티×연도 34,627행으로 옥수수 수확량을 예측하고, 생산성 지도와 기후
-  시나리오를 만든다. 핵심은 <strong>온도(극한고온 EDD) 확보 전/후 비교</strong> — 옥수수
-  생산에 무엇이 가장 중요한지, 그리고 이 데이터가 어디까지 믿을 만한지를 보여준다.</p>
+  <div class="eyebrow">ACDC · Corn Belt · 1981–2015 · v3</div>
+  <h1>옥수수 수확량 예측 & 작물 배분 최적화</h1>
+  <p class="sub">카운티×연도 34,627행으로 수확량을 예측(다중모델)하고, 기후 모델 A로
+  온난화 시나리오를 만들고, 단작 조합최적화(GA/SA vs MILP)로 작물 배치를 푼다. 핵심은
+  <strong>온도(극한고온 EDD)</strong>가 지배 변수라는 것, 그리고 이 데이터의 정직한 한계다.</p>
 </header>
 
 <div class="kpis">
@@ -227,6 +227,60 @@ footer{{margin-top:60px;padding-top:20px;border-top:1px solid var(--line);color:
 <p class="note">한계: ACDC에 카운티 경작면적이 없어 땅=카운티당 1단위 가정, x0는 과거 수익
 비율로 근사. 따라서 gain%의 절대크기보다 <strong>곡선의 모양</strong>이 결론. NASS 면적을
 붙이면 절대량까지 신뢰 가능(egress 차단으로 이번 세션엔 미확보).</p>
+
+<h2><span class="n">08</span>v3 — 여러 모델 비교 (트리가 왜 맞는가)</h2>
+<p>트리만 쓴 게 아니라 <strong>OLS/Ridge/Lasso/RF/GBM</strong>을 같은 프로토콜로 비교했다.
+우리 온도피처 gdd·edd는 이미 Schlenker-Roberts의 유익열/유해열 압축 그 자체다.</p>
+<table>
+<thead><tr><th>모델</th><th>RMSE</th><th>R²</th></tr></thead>
+<tbody>
+<tr><td>GBM</td><td>27.2</td><td style="color:var(--green)">0.58</td></tr>
+<tr><td>RandomForest</td><td>27.6</td><td>0.56</td></tr>
+<tr><td>OLS / Ridge</td><td>31.3</td><td>0.44</td></tr>
+<tr><td>Lasso</td><td>33.1</td><td>0.37</td></tr>
+</tbody>
+</table>
+{figure("20_heat_response_models_corn.png","유해고온 반응: 트리(빨강)는 고온의 비대칭 꺾임을 재현, 선형(회색)은 직선뿐.")}
+<p>"트리로 예측"이 틀린 게 아니라, <strong>왜 트리가 맞는지를 선형과의 대비로 증명</strong>한 것.
+고온의 비선형 손해를 선형은 구조적으로 못 잡는다(H3).</p>
+
+<h2><span class="n">09</span>v3 — 기후 모델 A + 핵심 발견</h2>
+<div class="callout">
+<div class="tag">★ 발견 — Corn Belt "warming hole"</div>
+<p style="margin:.4em 0"><strong>1981–2015 옥수수 벨트에서 극한고온(EDD)은 증가하지 않았다</strong>
+(추세 −0.046/yr, 평탄~하락). 오히려 강수가 +2.7mm/yr 증가. 즉 <strong>이 지역 관측추세를
+외삽하면 온난화 시나리오가 안 나온다.</strong></p>
+</div>
+{figure("22_climate_model.png","관측 EDD(검정)는 상승 없음. 온난화는 외생(IPCC) 가정으로만 부과 가능(점선).")}
+<p>그래서 온난화는 <strong>외생 가정(IPCC)</strong>으로 부과하고 시나리오로 다뤄야 한다(H4) —
+v2의 임의 'EDD×2'를 <strong>정당화하면서 교정</strong>한 셈이다.</p>
+<table>
+<thead><tr><th>시나리오</th><th>옥수수 수확량</th><th>기준 대비</th></tr></thead>
+<tbody>
+<tr><td>관측추세 외삽 2050</td><td>154.7</td><td>−1.7%</td></tr>
+<tr><td>IPCC mild (EDD×1.3)</td><td>153.4</td><td>−2.5%</td></tr>
+<tr><td>IPCC severe (EDD×1.8)</td><td>146.8</td><td style="color:var(--red)">−6.7%</td></tr>
+</tbody>
+</table>
+
+<h2><span class="n">10</span>v3 — 단작 조합최적화 (GA/SA vs MILP)</h2>
+<p>연속 LP가 아니라 각 카운티가 <strong>작물 하나만</strong> 고르는 binary 배정 + <strong>대두 35%
+윤작 요건</strong>(커플링 제약)으로 진짜 조합최적화를 만들고, 정확해(MILP)와 메타휴리스틱(GA/SA)을 비교.</p>
+<table>
+<thead><tr><th>방법</th><th>목적값</th><th>시간(s)</th><th>gap%</th></tr></thead>
+<tbody>
+<tr><td>MILP (정확해)</td><td>431,690</td><td>0.03</td><td>0.00</td></tr>
+<tr><td>GA</td><td>424,496</td><td>2.30</td><td style="color:var(--green)">1.67</td></tr>
+<tr><td>SA</td><td>422,127</td><td>6.15</td><td style="color:var(--green)">2.22</td></tr>
+</tbody>
+</table>
+{figure("21_meta_convergence.png","GA(파랑)·SA(빨강)가 MILP 최적(검은 점선)에 수렴. 정확해의 1.7~2.2% 이내.")}
+<div class="callout ok">
+<div class="tag">정직한 결론</div>
+<p style="margin:.4em 0">GA/SA가 정확해의 <strong>1.7–2.2% 이내로 수렴</strong>(H5). 다만 이 규모
+(659×2작물)에선 <strong>정확 MILP가 더 빠르고 최적</strong> — 강의 서사대로 "작물·카운티가 늘면"
+GA/SA 우위가 드러난다. 억지로 MILP를 느리게 만들지 않고 관측 사실을 그대로 보고한다.</p>
+</div>
 
 <footer>
 데이터: ACDC (Purdue PURR, CC-BY), 1981–2015 · 대상: Corn Belt 12개 주 · 피처: 강수·토양·

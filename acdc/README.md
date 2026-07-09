@@ -25,9 +25,12 @@ acdc/
 │   ├── prepare.py        # 병합·피처·추세/기상충격 분해 (gdd_slim 자동 인식)
 │   ├── eda.py            # EDA 그림 01–05 (추세·강수·토양·취약도·상관)
 │   ├── eda_temp.py       # 온도 EDA 그림 13–16 (EDD 타임라인·반응·민감도)
+│   ├── models_compare.py # [v3] Phase2 다중모델 비교 OLS/Ridge/Lasso/RF/GBM
 │   ├── train.py          # ML 학습·평가·해석·2012 스트레스 테스트
+│   ├── climate_model.py  # [v3] Phase3 기후 모델 A (warming hole + 시나리오)
 │   ├── scenario.py       # 예측1(생산성 지도) · 예측2(기후 시나리오)
-│   └── optimizer.py      # 2단계: 전환비용 감안 배치 최적화 (PuLP)
+│   ├── optimizer.py      # 2단계: 전환비용 감안 연속 LP 배치 (PuLP)
+│   └── optimize_meta.py  # [v3] Phase4-5 단작 조합최적화 GA/SA vs MILP
 ├── tools/
 │   └── shrink_gdd.py     # 큰 GDD 원본을 gdd_slim.csv로 압축(로컬 실행용)
 ├── figures/             # 생성 그림 01–18
@@ -52,6 +55,10 @@ acdc/
 | 16 | soy_trend | 대두 추세+충격 |
 | 17 | transition_tradeoff | 전환비용 트레이드오프 곡선 |
 | 18 | alloc_shift_by_state | 주별 권고 재배치 |
+| 19 | models_compare_corn | OLS/Ridge/Lasso/RF/GBM RMSE 비교 |
+| 20 | heat_response_models | 유해고온 반응: 선형 vs 트리 |
+| 21 | meta_convergence | GA/SA vs MILP 수렴 |
+| 22 | climate_model | 기후모델 A: warming hole + 시나리오 |
 
 ## 데이터 출처
 ACDC (Purdue PURR, CC-BY, DOI:10.4231/R72F7KK2), 1981–2015. 대상: Corn Belt 12개 주.
