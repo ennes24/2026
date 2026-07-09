@@ -530,6 +530,54 @@ print("  이 정도로 나쁠 줄은 과소평가합니다 — '평년엔 쓸만
 print("  이 데이터의 정직한 한계입니다.")
 """)
 
+md("""
+### 5.5 관개비율을 피처로 추가하면 성능이 오를까?
+
+앞의 EDA(그림4 검증)에서 관개는 '약한' 신호였습니다. 그럼 모델 피처로 넣으면 실제로
+도움이 될까요? USDA NASS 2012 카운티 관개비율을 붙여 **넣기 전/후 R²를 직접 비교**합니다.
+
+- NASS 목록에 없는 카운티(관개 옥수수 거의 없음)는 관개비율 0으로 채웁니다.
+- 나머지 조건은 5.1과 동일하게 두고 `irrig_share` 한 컬럼만 추가합니다.
+""")
+
+code("""
+irr = pd.read_csv("../data/irrigation_slim.csv")
+corn_irr = corn_ml.merge(irr, on="stco", how="left")
+corn_irr["irrig_share"] = corn_irr["irrig_share"].fillna(0.0)   # 목록에 없으면 관개 거의 없음
+
+tr2, te2 = corn_irr[corn_irr.year < SPLIT_YEAR], corn_irr[corn_irr.year >= SPLIT_YEAR]
+
+def fit_eval(feature_list):
+    model = HistGradientBoostingRegressor(max_iter=400, learning_rate=0.05,
+                                          max_leaf_nodes=31, random_state=0)
+    model.fit(tr2[feature_list], tr2["corn"])
+    pred = model.predict(te2[feature_list])
+    return np.sqrt(mean_squared_error(te2["corn"], pred)), r2_score(te2["corn"], pred)
+
+feats_base = NUM + ["state"]                 # 5.1 과 동일 (year 포함)
+feats_irr = feats_base + ["irrig_share"]     # 관개 한 컬럼 추가
+
+rmse0, r2_0 = fit_eval(feats_base)
+rmse1, r2_1 = fit_eval(feats_irr)
+
+compare = pd.DataFrame({
+    "features": ["기본(관개 없음)", "기본 + 관개비율"],
+    "RMSE": [rmse0, rmse1],
+    "R2": [r2_0, r2_1],
+})
+compare.round(3)
+""")
+
+code("""
+print(f"R2 변화 : {r2_0:.3f} -> {r2_1:.3f}  ({r2_1 - r2_0:+.3f})")
+print(f"RMSE 변화: {rmse0:.2f} -> {rmse1:.2f} bu/ac  ({rmse1 - rmse0:+.2f})")
+print()
+print("→ 관개비율을 넣으면 성능이 '조금' 오릅니다(작지만 실제 개선). EDA에서 본 '약한 신호'와")
+print("  일관됩니다 — 관개가 도움은 되지만 결정적 변수는 아니라는 뜻입니다.")
+print("→ 참고: 2012 같은 극단 가뭄해는 관개를 넣어도 여전히 과대예측입니다. 그건 관개가")
+print("  아니라 '7월 고온 타이밍이 계절총합에 희석되는' 5.4의 문제라서 그렇습니다.")
+""")
+
 # ------------------------------------------------------------
 # 6. 머신러닝 2 — 날씨 예측
 # ------------------------------------------------------------
