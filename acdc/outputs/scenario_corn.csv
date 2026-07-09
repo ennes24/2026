@@ -1,0 +1,6 @@
+scenario,mean_pred,pct_change_vs_baseline
+baseline,156.8,0.0
+drought_-15%,156.6,-0.2
+drought_-30%,147.3,-6.1
+warming_+2C_proxy,157.2,0.2
+warming_+3C_drought_proxy,151.1,-3.6
