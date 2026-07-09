@@ -45,8 +45,10 @@ def from_nass(infile):
     df["val"] = df[val_col].map(_num)
     desc = df["short_desc"].str.upper()
 
-    irr = df[desc.str.contains("IRRIGATED") & desc.str.contains("ACRES HARVESTED")]
-    tot = df[~desc.str.contains("IRRIGATED") & desc.str.contains("ACRES HARVESTED")]
+    # 옥수수 grain(알곡)만: silage·operations 행 제외 (수확량 타깃이 grain bu/ac 이므로)
+    acres = desc.str.contains("ACRES HARVESTED") & ~desc.str.contains("OPERATIONS") & ~desc.str.contains("SILAGE")
+    irr = df[acres & desc.str.contains("IRRIGATED")]
+    tot = df[acres & ~desc.str.contains("IRRIGATED")]
     irr = irr.groupby("stco")["val"].sum()
     tot = tot.groupby("stco")["val"].sum()
     out = pd.DataFrame({"irr_acres": irr, "tot_acres": tot}).dropna()

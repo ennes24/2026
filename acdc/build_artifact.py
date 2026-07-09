@@ -110,11 +110,14 @@ footer{{margin-top:60px;padding-top:20px;border-top:1px solid var(--line);color:
 침수로 둘 다 감소. 직선이 아니라서 <strong>트리 기반 모델</strong>이 맞다.</p>
 {figure("02_precip_response.png","생육기 강수 대 수확량 편차. 가운데가 볼록한 언덕형.")}
 <h3>어느 주가 날씨에 가장 흔들리나 = 기후 취약도</h3>
-<p>변동성 최대는 <strong>사우스다코타</strong>, 최소는 <strong>네브래스카</strong>. <strong>원인은
-이 데이터로 확인 불가</strong> — 이 데이터셋엔 관개 등 원인 후보 컬럼이 없고, 실제 관개 데이터는
-egress 차단으로 이번 세션에 확보하지 못했다. 원인 규명 없이 "어디가 위험한가"라는 관측 사실만
-재배치·보험 논의에 쓴다.</p>
+<p>변동성 최대는 <strong>사우스다코타</strong>, 최소는 <strong>네브래스카</strong>.</p>
 {figure("04_state_vulnerability.png","주별 수확량 기상충격의 표준편차(추세 대비 %).")}
+<p><strong>원인 검증(실데이터):</strong> USDA NASS 2012 카운티 관개비율을 실제로 붙여 확인했다.
+<strong>NE는 관개 1위(옥수수 면적 54%)이자 변동성 최저</strong> — 그 한 곳은 관개 설명이 맞다.
+하지만 <strong>일반 법칙은 아니다</strong>: 관개↔변동성 상관이 약하고(주 r=−0.08, 카운티 r=−0.13),
+TX·KS는 관개가 높아도 변동성이 크다. "관개=안정"은 배경지식 단정이었고, 실데이터로
+"NE엔 맞지만 일반화 불가"로 교정했다.</p>
+{figure("23_irrigation_vs_volatility.png","주별 관개비율 vs 변동성. NE는 좌하단(관개↑·변동↓)이나 TX·KS가 추세를 깬다.")}
 <h3>극한고온(EDD) 타임라인 — 고온해가 흉작과 정렬</h3>
 <p>온도가 들어온 뒤에야 보이는 관계. 연도별 극한고온(EDD) 막대와 옥수수 편차를 겹치면
 <strong>2012·1988 고온해가 흉작과 정확히 정렬</strong>한다 — 고온이 흉작의 방아쇠다.</p>

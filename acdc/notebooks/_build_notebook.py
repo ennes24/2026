@@ -250,8 +250,47 @@ plt.tight_layout()
 plt.show()
 
 print(f"변동성 최대: {g.index[-1]} ({g.iloc[-1]:.1f}%)  |  최소: {g.index[0]} ({g.iloc[0]:.1f}%)")
-print("→ 원인은 이 데이터로 확인할 수 없습니다(관개 등 원인 후보 컬럼이 데이터에 없음).")
-print("  '어디가 위험한가'라는 관측 사실만 사용하고, 원인 규명은 실제 관개 데이터 확보 후 과제로 남깁니다.")
+""")
+
+md("""
+#### 원인을 데이터로 검증 — "관개 때문인가?"
+
+"NE가 안정적인 건 관개가 많아서"라는 설명은 **배경지식 추측**이라 그대로 쓰면 안 됩니다.
+USDA NASS Census 2012의 **카운티별 관개비율**을 실제로 붙여 검증합니다.
+(이 파일은 `../data/irrigation_slim.csv` — 원본은 `tools/prep_irrigation.py`로 가공)
+""")
+
+code("""
+import os
+irr_path = "../data/irrigation_slim.csv"
+if os.path.exists(irr_path):
+    irr = pd.read_csv(irr_path)
+    dm = corn.merge(irr, on="stco", how="left")
+    st = (dm.groupby("state_abbr")
+            .agg(irrig=("irrig_share", "mean"), vol=("corn_anom_pct", lambda x: x.std()))
+            .dropna().sort_values("irrig", ascending=False))
+    r_state = st.irrig.corr(st.vol)
+
+    fig, ax = plt.subplots(figsize=(9, 5.5))
+    ax.scatter(st.irrig * 100, st.vol, s=60, color="#2563eb", zorder=3)
+    for name, row in st.iterrows():
+        ax.annotate(name, (row.irrig * 100, row.vol), textcoords="offset points",
+                    xytext=(5, 3), fontsize=9,
+                    color="#b91c1c" if name in ("NE", "TX", "KS", "SD") else "#444")
+    b1, b0 = np.polyfit(st.irrig * 100, st.vol, 1)
+    xs = np.linspace(0, st.irrig.max() * 100, 20)
+    ax.plot(xs, b0 + b1 * xs, "--", color="#9ca3af", label=f"trend (r={r_state:.2f}, weak)")
+    ax.set(xlabel="Irrigation share of corn area (%, NASS 2012)",
+           ylabel="Weather-shock volatility (std of yield anomaly %)",
+           title="Does irrigation reduce volatility? NE fits, TX/KS don't")
+    ax.legend(); plt.tight_layout(); plt.show()
+
+    print(f"주단위 상관 r = {r_state:.3f}")
+    print("→ NE: 관개 1위(54%)이자 변동성 최저 — 그 한 곳은 관개 설명이 맞습니다.")
+    print("→ 그러나 상관이 약하고(TX·KS는 관개 높아도 변동성 큼) '관개=안정'을 일반화할 수는 없습니다.")
+    print("   즉 배경지식 추측을 실데이터로 'NE엔 맞지만 일반화 불가'로 교정했습니다.")
+else:
+    print("irrigation_slim.csv 가 없으면 이 검증은 건너뜁니다. (tools/prep_irrigation.py 로 생성)")
 """)
 
 md("""
