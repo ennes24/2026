@@ -8,14 +8,20 @@ Phase 7    기후 시나리오 (scenario)
 """
 import os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
-import eda, eda_temp, models_compare, train, climate_model, scenario, optimizer, optimize_meta
+import eda, eda_temp, models_compare, train
+import weather_eda, weather_ml, climate_model
+import scenario, optimizer, optimize_meta
 
 if __name__ == "__main__":
+    # --- 트랙 1: 수확량 예측 (EDA + ML) ---
     eda.run(); print("\n")
     eda_temp.run(); print("\n")
     models_compare.run("corn"); print("\n")
     for crop in ("corn", "soybean"):
         train.print_report(train.train_crop(crop)); print()
+    # --- 트랙 2: 날씨(기후) 예측 (EDA + ML + 시나리오 모델 A) ---
+    weather_eda.run(); print("\n")
+    weather_ml.run(); print("\n")
     climate_model.run(); print("\n")
     scenario.run(); print("\n")
     optimizer.run(); print("\n")

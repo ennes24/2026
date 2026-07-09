@@ -244,7 +244,20 @@ footer{{margin-top:60px;padding-top:20px;border-top:1px solid var(--line);color:
 <p>"트리로 예측"이 틀린 게 아니라, <strong>왜 트리가 맞는지를 선형과의 대비로 증명</strong>한 것.
 고온의 비선형 손해를 선형은 구조적으로 못 잡는다(H3).</p>
 
-<h2><span class="n">09</span>v3 — 기후 모델 A + 핵심 발견</h2>
+<h2><span class="n">09a</span>트랙 2 — 날씨 예측 EDA & ML (예측 가능한가?)</h2>
+<p>수확량이 아니라 <strong>기후 변수(EDD·강수) 자체</strong>를 타깃으로 "미래 날씨를 예측할 수
+있나"를 물었다. 답은 데이터가 준다.</p>
+{figure("W2_variance_decomp.png","분산분해: EDD 변동의 83%가 '어디(공간)', 연도(시간)는 11%뿐.")}
+{figure("23_weather_ml_r2.png","날씨 예측: ML이 단순 climatology(카운티 평년)를 못 이긴다. 작년값(persistence)은 무용.")}
+<div class="callout">
+<div class="tag">핵심 — 날씨는 점예측 대상이 아니다</div>
+<p style="margin:.4em 0">EDD 분산의 <strong>83%가 공간</strong>(어디가 더운가), 연차는 11%.
+작년→올해 자기상관은 EDD 0.11·강수 0.02로 <strong>사실상 예측 불가</strong>. 실제로 미래 EDD
+예측에서 <strong>단순 평년(climatology) R² 0.75가 ML 0.56을 이기고</strong>, 연차편차 R²은
+음수(−0.76). ⇒ 미래 날씨는 <strong>평년 + 추세 + 외생 시나리오</strong>로 다뤄야 한다(H4).</p>
+</div>
+
+<h2><span class="n">09b</span>트랙 2 — 기후 모델 A + 핵심 발견</h2>
 <div class="callout">
 <div class="tag">★ 발견 — Corn Belt "warming hole"</div>
 <p style="margin:.4em 0"><strong>1981–2015 옥수수 벨트에서 극한고온(EDD)은 증가하지 않았다</strong>
