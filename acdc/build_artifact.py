@@ -110,8 +110,10 @@ footer{{margin-top:60px;padding-top:20px;border-top:1px solid var(--line);color:
 침수로 둘 다 감소. 직선이 아니라서 <strong>트리 기반 모델</strong>이 맞다.</p>
 {figure("02_precip_response.png","생육기 강수 대 수확량 편차. 가운데가 볼록한 언덕형.")}
 <h3>어느 주가 날씨에 가장 흔들리나 = 기후 취약도</h3>
-<p>변동성 최대는 <strong>사우스다코타</strong>, 최소는 <strong>네브래스카</strong>. NE가
-안정적인 건 관개 비율이 높기 때문 — 데이터에 관개 컬럼이 없어도 변동성 지도가 그 구조를 드러낸다.</p>
+<p>변동성 최대는 <strong>사우스다코타</strong>, 최소는 <strong>네브래스카</strong>. <strong>원인은
+이 데이터로 확인 불가</strong> — 이 데이터셋엔 관개 등 원인 후보 컬럼이 없고, 실제 관개 데이터는
+egress 차단으로 이번 세션에 확보하지 못했다. 원인 규명 없이 "어디가 위험한가"라는 관측 사실만
+재배치·보험 논의에 쓴다.</p>
 {figure("04_state_vulnerability.png","주별 수확량 기상충격의 표준편차(추세 대비 %).")}
 <h3>극한고온(EDD) 타임라인 — 고온해가 흉작과 정렬</h3>
 <p>온도가 들어온 뒤에야 보이는 관계. 연도별 극한고온(EDD) 막대와 옥수수 편차를 겹치면
