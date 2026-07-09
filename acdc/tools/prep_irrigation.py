@@ -35,11 +35,14 @@ def from_nass(infile):
     df = pd.read_csv(infile, dtype=str)
     # 컬럼명이 대소문자/공백 섞여올 수 있어 표준화
     df.columns = [c.strip().lower() for c in df.columns]
-    # FIPS 조합
+    # FIPS 조합 (county 컬럼명이 버전마다 county_code / county_ansi 로 다름)
+    county_col = "county_code" if "county_code" in df.columns else "county_ansi"
+    val_col = "value" if "value" in df.columns else ("val" if "val" in df.columns else df.columns[-1])
+    df = df[df["state_fips_code"].notna() & df[county_col].notna()].copy()
     st = df["state_fips_code"].str.zfill(2)
-    co = df["county_code"].str.zfill(3)
+    co = df[county_col].str.zfill(3)
     df["stco"] = (st + co).astype(int)
-    df["val"] = df["value"].map(_num)
+    df["val"] = df[val_col].map(_num)
     desc = df["short_desc"].str.upper()
 
     irr = df[desc.str.contains("IRRIGATED") & desc.str.contains("ACRES HARVESTED")]
