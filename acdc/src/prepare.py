@@ -43,7 +43,8 @@ def has_temperature() -> str | None:
     나중에 gddAprOct.csv 를 data/ 에 넣으면 온도 피처가 자동으로 켜지도록
     이 훅을 남겨둔다.
     """
-    for name in ("gddAprOct.csv", "gddMarAug.csv"):
+    # slim(이미 gdd/edd 계산된) 파일을 우선 인식, 없으면 원본 GDD 히스토그램.
+    for name in ("gdd_slim.csv", "gddAprOct.csv", "gddMarAug.csv"):
         path = os.path.join(DATA, name)
         if os.path.exists(path):
             return path
@@ -58,6 +59,9 @@ def build_temperature_features(path: str) -> pd.DataFrame:
     GDD 는 가산적이라 해당 버킷들을 그냥 더하면 된다.
     """
     g = pd.read_csv(path)
+    # 이미 집계된 slim 파일이면(gdd/edd 컬럼 존재) 그대로 사용.
+    if {"gdd", "edd"}.issubset(g.columns):
+        return g[["stco", "year", "gdd", "edd"]].copy()
     def bucket(t):  # +t°C 버킷 컬럼명
         return f"gddp{t}"
     gdd_cols = [bucket(t) for t in range(10, 30) if bucket(t) in g.columns]
