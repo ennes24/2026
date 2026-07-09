@@ -57,20 +57,36 @@ def track2_climate(crop="corn"):
     m, df, feats = fit_full(crop)
     base = df[df.year == df.year.max()].copy()
 
-    def predict_with(mult_ppt=1.0, et_penalty=0.0):
+    has_edd = "edd" in feats
+
+    def predict_with(mult_ppt=1.0, mult_edd=1.0, et_penalty=0.0):
         x = base[feats].copy()
-        # 가뭄: 강수 스케일. 온난화 프록시: 증발산↑ → 유효강수 추가 감소(et_penalty).
         x["ppt"] = x["ppt"] * mult_ppt * (1 - et_penalty)
+        if has_edd:
+            # 온난화 = 극한고온(EDD) 노출 증가. 모델이 실측에서 학습한 EDD→수확량
+            # 관계를 그대로 이용. (버킷 히스토그램을 슬림화했으므로 EDD 배율로 표현)
+            x["edd"] = x["edd"] * mult_edd
         return m.predict(x)
 
-    scenarios = {
-        "baseline": dict(mult_ppt=1.00, et_penalty=0.00),
-        "drought_-15%": dict(mult_ppt=0.85, et_penalty=0.00),
-        "drought_-30%": dict(mult_ppt=0.70, et_penalty=0.00),
-        # 온난화 프록시: +2°C 가정 → 증발산 수요 약 +8% → 유효강수 -8% (근사, 문헌 대략치)
-        "warming_+2C_proxy": dict(mult_ppt=1.00, et_penalty=0.08),
-        "warming_+3C_drought_proxy": dict(mult_ppt=0.85, et_penalty=0.12),
-    }
+    if has_edd:
+        # 온도 데이터 확보 → EDD 기반 '진짜' 온난화 시나리오
+        scenarios = {
+            "baseline": dict(mult_ppt=1.00, mult_edd=1.0),
+            "drought_-15%": dict(mult_ppt=0.85, mult_edd=1.0),
+            "drought_-30%": dict(mult_ppt=0.70, mult_edd=1.0),
+            "warming_EDDx1.5": dict(mult_ppt=1.00, mult_edd=1.5),
+            "warming_EDDx2.0": dict(mult_ppt=1.00, mult_edd=2.0),
+            "warm+dry_EDDx2_ppt-20%": dict(mult_ppt=0.80, mult_edd=2.0),
+        }
+    else:
+        # 온도 미확보 → 강수 프록시만 (과소평가 주의)
+        scenarios = {
+            "baseline": dict(mult_ppt=1.00, et_penalty=0.00),
+            "drought_-15%": dict(mult_ppt=0.85, et_penalty=0.00),
+            "drought_-30%": dict(mult_ppt=0.70, et_penalty=0.00),
+            "warming_+2C_proxy": dict(mult_ppt=1.00, et_penalty=0.08),
+            "warming_+3C_drought_proxy": dict(mult_ppt=0.85, et_penalty=0.12),
+        }
     base_pred = predict_with()
     rows = []
     per_state = {}
@@ -85,8 +101,8 @@ def track2_climate(crop="corn"):
 
     # 그림: 시나리오별 전체 평균 변화
     fig, ax = plt.subplots(figsize=(8.5, 5))
-    colors = ["#2563eb", "#f59e0b", "#dc2626", "#a855f7", "#7c2d12"]
-    ax.bar(res.scenario, res.pct_change_vs_baseline, color=colors)
+    palette = ["#2563eb", "#f59e0b", "#dc2626", "#a855f7", "#7c2d12", "#0f766e"]
+    ax.bar(res.scenario, res.pct_change_vs_baseline, color=palette[:len(res)])
     ax.axhline(0, color="#444", lw=1)
     for i, v in enumerate(res.pct_change_vs_baseline):
         ax.text(i, v, f"{v:+.1f}%", ha="center",
@@ -122,12 +138,13 @@ def run():
     print(f"\n→ 가뭄 -30% 시 전체 예측수확량 {res.loc[res.scenario=='drought_-30%','pct_change_vs_baseline'].iloc[0]:.1f}%.")
     print(f"→ 가뭄에 가장 취약한 주: {drop.index[0]} ({drop.iloc[0]:.1f}%), "
           f"가장 견디는 주: {drop.index[-1]} ({drop.iloc[-1]:.1f}%).")
-    print("\n[한계 — 반드시 읽을 것]")
-    print(" 온난화의 핵심 경로는 '기온 상승 → 개화기 고온피해(EDD)'인데, 이 세션은")
-    print(" 온도(GDD) 파일을 못 받아 그 채널을 직접 모의하지 못한다. 위 warming_*")
-    print(" 시나리오는 '기온↑→증발산↑→유효강수↓'만 반영한 프록시라 실제 고온피해를")
-    print(" 과소평가한다(2012 스트레스 테스트에서 확인된 그 편향). gddAprOct.csv 를")
-    print(" data/ 에 넣으면 edd 피처와 진짜 온난화 시나리오가 자동 활성화된다.")
+    warm = res[res.scenario.str.startswith("warming")]
+    if len(warm):
+        print("\n[온난화 — EDD 기반 실측 시나리오]")
+        for _, r in warm.iterrows():
+            print(f"  {r.scenario}: {r.pct_change_vs_baseline:+.1f}%")
+        print(" 극한고온 노출(EDD)이 늘수록 수확량이 실제로 감소 — 모델이 데이터에서")
+        print(" 학습한 관계다. 강수만 쓰던 프록시(+0.2%)와 달리 이제 방향·크기가 나온다.")
 
 
 if __name__ == "__main__":

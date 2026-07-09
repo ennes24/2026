@@ -102,6 +102,20 @@ def train_crop(crop="corn"):
     except Exception as e:
         print("PDP skip:", e)
 
+    # ---- 해석 2b: 부분의존도 (극한고온 EDD) — 온도 데이터 있을 때만 ----
+    if "edd" in feats:
+        try:
+            pd_edd = partial_dependence(best_model, Xtr, ["edd"], grid_resolution=40)
+            xs = pd_edd["grid_values"][0]; ys = pd_edd["average"][0]
+            fig, ax = plt.subplots(figsize=(8, 5))
+            ax.plot(xs, ys, color="#dc2626")
+            ax.set(xlabel="Extreme-heat exposure EDD (>30 C degree-days)",
+                   ylabel=f"Predicted {crop} yield (bu/ac)",
+                   title=f"{crop}: more extreme heat -> lower yield (model's learned response)")
+            fig.tight_layout(); fig.savefig(os.path.join(FIG, f"12_pdp_edd_{crop}.png")); plt.close(fig)
+        except Exception as e:
+            print("EDD PDP skip:", e)
+
     # ---- 해석 3: 실제 vs 예측 (테스트연도) ----
     fig, ax = plt.subplots(figsize=(6, 6))
     ax.scatter(yte, best_pred, s=6, alpha=0.25, color="#2563eb")

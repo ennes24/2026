@@ -76,17 +76,17 @@ footer{{margin-top:60px;padding-top:20px;border-top:1px solid var(--line);color:
 <div class="wrap">
 <header class="hero">
   <div class="eyebrow">ACDC · Corn Belt · 1981–2015</div>
-  <h1>옥수수 수확량: 데이터가 어디까지 말해주는가</h1>
+  <h1>옥수수 수확량: 온도를 넣으니 데이터가 달라졌다</h1>
   <p class="sub">카운티×연도 34,627행으로 옥수수 수확량을 예측하고, 생산성 지도와 기후
-  스트레스 시나리오를 만든다. 그리고 이 데이터가 <strong>어디까지 믿을 만한지</strong>를
-  2012년 대가뭄으로 정직하게 검증한다.</p>
+  시나리오를 만든다. 핵심은 <strong>온도(극한고온 EDD) 확보 전/후 비교</strong> — 옥수수
+  생산에 무엇이 가장 중요한지, 그리고 이 데이터가 어디까지 믿을 만한지를 보여준다.</p>
 </header>
 
 <div class="kpis">
-  <div class="kpi"><div class="v gold">0.52</div><div class="l">옥수수 테스트 R² (2011–15)<br>추세만 대비 +0.30</div></div>
-  <div class="kpi"><div class="v green">+1.7</div><div class="l">bu/ac/년 기술추세<br>(품종·농법 발전)</div></div>
-  <div class="kpi"><div class="v red">+26</div><div class="l">2012 가뭄 과대예측(bu/ac)<br>= 온도 데이터 부재의 증거</div></div>
-  <div class="kpi"><div class="v">−6.1%</div><div class="l">가뭄 −30% 강수 시<br>예측 수확량 변화</div></div>
+  <div class="kpi"><div class="v gold">0.58</div><div class="l">옥수수 테스트 R² (2011–15)<br>온도 추가로 0.52→0.58</div></div>
+  <div class="kpi"><div class="v red">EDD</div><div class="l">1위 피처가 된 극한고온<br>= "옥수수엔 온도가 가장 중요"</div></div>
+  <div class="kpi"><div class="v red">−8.6%</div><div class="l">온난화(EDD×2) 시 옥수수<br>강수 프록시는 +0.2%였음</div></div>
+  <div class="kpi"><div class="v">+29</div><div class="l">2012 여전히 과대예측(bu/ac)<br>계절총합의 시간해상도 한계</div></div>
 </div>
 
 <h2><span class="n">01</span>설계를 3번 검토했다</h2>
@@ -115,76 +115,89 @@ footer{{margin-top:60px;padding-top:20px;border-top:1px solid var(--line);color:
 {figure("04_state_vulnerability.png","주별 수확량 기상충격의 표준편차(추세 대비 %).")}
 
 <h2><span class="n">03</span>머신러닝 — 무엇을 근거로 예측하나</h2>
-<p>입력: 생육기 강수 + 토양(보수력·유기물·pH·점토·경사) + 연도 + 주. 타깃: 카운티 옥수수
-수확량. <strong>2010년 이전 학습 / 2011–15 테스트</strong>(미래를 미리 안 보는 예보 방식).</p>
+<p>입력: 생육기 강수 + <strong>온도(극한고온 EDD·유익열 GDD)</strong> + 토양 + 연도 + 주.
+타깃: 카운티 옥수수 수확량. <strong>2010년 이전 학습 / 2011–15 테스트</strong>(예보 방식).</p>
 <table>
 <thead><tr><th>모델</th><th>RMSE</th><th>MAE</th><th>R²</th></tr></thead>
 <tbody>
-<tr><td>Hist Gradient Boosting <span class="note">(best)</span></td><td>28.8</td><td>22.2</td><td>0.52</td></tr>
-<tr><td>Random Forest</td><td>29.6</td><td>22.4</td><td>0.50</td></tr>
+<tr><td>Hist Gradient Boosting <span class="note">(best)</span></td><td>27.2</td><td>20.9</td><td>0.58</td></tr>
+<tr><td>Random Forest</td><td>27.6</td><td>20.9</td><td>0.56</td></tr>
 <tr><td>추세만 (baseline)</td><td>36.9</td><td>27.5</td><td>0.22</td></tr>
 </tbody>
 </table>
-<p>날씨·토양을 넣으면 추세만 대비 <strong>RMSE 8.1 bu/ac 개선</strong> — 기후·토양 정보가
-실제로 기여한다. 대두는 R² 0.63으로 더 좋다(고온 민감도가 낮아 강수만으로 잘 설명).</p>
-{figure("06_importance_corn.png","순열 중요도. state가 큰 건 지역의 기후·토양 기본수준을 통째로 흡수하기 때문.")}
-{figure("08_actual_vs_pred_corn.png","실제 대 예측. 낮은 수확량(가뭄) 구간에서 위로 치우침 = 과대예측.")}
+<p>온도를 넣자 옥수수 R²가 <strong>0.52 → 0.58</strong>로 오르고, 순열 중요도에서
+<strong>EDD(극한고온)가 즉시 1위 피처(0.26)</strong>가 됐다. 온도 없을 때 1위였던
+<code>state</code>(지역효과)를 밀어냈다는 건, 그 지역효과의 상당 부분이 실은
+<strong>온도였다</strong>는 뜻 — "옥수수엔 온도가 가장 중요하다"가 데이터로 확인된 것.</p>
+{figure("06_importance_corn.png","순열 중요도. 온도 추가 후 EDD(극한고온)가 1위로 올라섬.")}
+{figure("12_pdp_edd_corn.png","모델이 학습한 관계: 극한고온(EDD)이 커질수록 예측 수확량이 단조 감소.")}
+{figure("08_actual_vs_pred_corn.png","실제 대 예측. 낮은 수확량 구간에서 여전히 위로 치우침(다음 절).")}
 
 <h2><span class="n">04</span>데이터 적합성 — 정직한 판정</h2>
-<div class="callout">
-<div class="tag">핵심 결론</div>
-<p style="margin:.4em 0"><strong>평년 예측엔 적합하다. 그러나 온난화가 정작 중요해지는
-'극한 고온해'엔 불충분하다 — 온도(GDD/EDD) 데이터가 없기 때문이다.</strong></p>
+<div class="callout ok">
+<div class="tag">판정 (1) — 온도가 필수였고, 가설이 확인됐다</div>
+<p style="margin:.4em 0">온도를 넣자 옥수수 R²가 오르고 <strong>EDD가 1위 피처</strong>,
+온난화 시나리오가 비로소 작동. <strong>"옥수수 생산에 무엇이 가장 중요한가 = (물 다음)
+개화기 극한고온"</strong>이 데이터로 증명됐다.</p>
 </div>
-<p>감이 아니라 <strong>2012 대가뭄 스트레스 테스트</strong>로 증명:</p>
 <table>
-<thead><tr><th>작물</th><th>2012 실제</th><th>2012 예측</th><th>오차</th></tr></thead>
+<thead><tr><th>항목</th><th>온도 없음</th><th>온도 있음</th></tr></thead>
 <tbody>
-<tr><td>옥수수</td><td>109</td><td>135</td><td style="color:var(--red)">+26 (가뭄 과소평가)</td></tr>
-<tr><td>대두</td><td>38</td><td>41</td><td>+3 (거의 맞음)</td></tr>
+<tr><td>옥수수 테스트 R²</td><td>0.52</td><td style="color:var(--green)">0.58</td></tr>
+<tr><td>1위 피처</td><td>state (지역)</td><td style="color:var(--green)">edd (극한고온)</td></tr>
+<tr><td>온난화 시나리오</td><td>+0.2% (무의미)</td><td style="color:var(--green)">EDD×2 → −8.6%</td></tr>
 </tbody>
 </table>
-<p>2012년은 강수 부족 + <strong>개화기 극한 고온</strong>이 겹친 사건인데, 강수(473mm)만으로는
-그 파국을 예상 못 한다. 실제 원인인 '수분기 고온'이 피처에 없기 때문. 대두가 잘 맞은 것도
-같은 논리(고온 민감도 낮음) — <strong>차이의 원인이 정확히 '온도'임을 교차 확인</strong>했다.</p>
-<div class="callout ok">
-<div class="tag">해결책 (코드에 반영됨)</div>
-<p style="margin:.4em 0"><code>acdc/data/gddAprOct.csv</code>를 넣고 <code>run_all.py</code>만
-다시 돌리면 GDD(10–29°C)·EDD(30°C+) 피처와 진짜 온난화 시나리오가 자동으로 켜진다.
-사용자가 못 올린 그 온도 파일이 <strong>선택이 아니라 필수</strong>임이 데이터로 증명된 것.</p>
+<div class="callout">
+<div class="tag">판정 (2) — 그래도 2012는 못 잡는다</div>
+<p style="margin:.4em 0">온도를 넣어도 2012 옥수수는 <strong>여전히 +29 과대예측</strong>
+(예측 138 vs 실제 109). 남은 원인은 온도가 아니라 <strong>데이터의 시간해상도</strong>다.</p>
 </div>
+<table>
+<thead><tr><th>작물</th><th>2012 실제</th><th>예측(온도 포함)</th><th>오차</th></tr></thead>
+<tbody>
+<tr><td>옥수수</td><td>109</td><td>138</td><td style="color:var(--red)">+29</td></tr>
+<tr><td>대두</td><td>38</td><td>42</td><td>+3</td></tr>
+</tbody>
+</table>
+<p>2012 피해는 7월 수분기에 고온·가뭄이 <strong>동시에, 평소 안 겪던 핵심 벨트에</strong>
+집중됐는데, 우리 피처는 <strong>Mar–Aug 계절 총합</strong>이라 그 7월 집중을 희석한다.
+계절합 EDD(31.6, 평년의 2배)가 설명하는 건 붕괴의 3분의 1 정도. <strong>평년·추세·온난화
+방향엔 충분하지만, 2012급 tail 극한 재현엔 월 단위(특히 7월) 해상도가 더 필요</strong>하다.</p>
 
 <h2><span class="n">05</span>예측 1 — 생산성 지도</h2>
 <p>학습 모델로 카운티 수확량을 예측해 주별로 집계. 해석은 <strong>'재배치의 방향'</strong>:
 같은 면적이면 상위 주 비중을 늘릴수록 총생산↑ (실제 최적화에선 전환비용 패널티로 급격한
 변화를 억제).</p>
-{figure("09_productivity_corn.png","주별 예측 옥수수 수확량. 아이오와 최고(184) ~ 텍사스 최저(114).")}
+{figure("09_productivity_corn.png","주별 예측 옥수수 수확량. 아이오와 최고(186) ~ 텍사스 최저(111).")}
 
 <h2><span class="n">06</span>예측 2 — 기후 스트레스 시나리오</h2>
+<p class="lead">온도 확보로 <strong>EDD(극한고온)를 직접 늘리는 진짜 온난화 시나리오</strong>가 가능해졌다.</p>
 <table>
 <thead><tr><th>시나리오</th><th>예측 수확량</th><th>기준 대비</th></tr></thead>
 <tbody>
-<tr><td>baseline</td><td>156.8</td><td>0.0%</td></tr>
-<tr><td>가뭄 −15% 강수</td><td>156.6</td><td>−0.2%</td></tr>
-<tr><td>가뭄 −30% 강수</td><td>147.3</td><td style="color:var(--red)">−6.1%</td></tr>
-<tr><td>온난화 +2°C (프록시)</td><td>157.2</td><td>+0.2%</td></tr>
-<tr><td>온난화 +3°C+가뭄 (프록시)</td><td>151.1</td><td>−3.6%</td></tr>
+<tr><td>baseline</td><td>157.4</td><td>0.0%</td></tr>
+<tr><td>가뭄 −30% 강수</td><td>155.4</td><td>−1.3%</td></tr>
+<tr><td>온난화 EDD×1.5</td><td>150.6</td><td style="color:var(--red)">−4.3%</td></tr>
+<tr><td>온난화 EDD×2.0</td><td>143.8</td><td style="color:var(--red)">−8.6%</td></tr>
+<tr><td>온난화+가뭄 복합</td><td>143.5</td><td style="color:var(--red)">−8.8%</td></tr>
 </tbody>
 </table>
-{figure("10_scenario_corn.png","시나리오별 예측 수확량 변화율.")}
-{figure("11_drought_by_state_corn.png","가뭄 -30% 시 주별 감소율. SD가 가장 취약.")}
-<div class="callout">
-<div class="tag">한계 · 반드시 읽을 것</div>
-<p style="margin:.4em 0">가뭄(강수↓)은 직접 모의 가능하나, <strong>온난화(기온↑)는 프록시로만</strong>
-넣었다. 결과가 +0.2%로 거의 반응 없는 것 자체가 발견이다 — <strong>강수만으로는 온난화
-피해가 안 잡히고 심지어 +로 뒤집힌다.</strong> 3절의 '온도 없음' 문제가 시나리오에서도 재현됐다.
-진짜 온난화 분석은 온도 파일 투입 후 EDD 시나리오로 해야 한다.</p>
+{figure("10_scenario_corn.png","시나리오별 예측 수확량 변화율. 온난화(EDD↑)가 가뭄 단독보다 타격이 크다.")}
+{figure("11_drought_by_state_corn.png","가뭄 -30% 시 주별 감소율.")}
+<div class="callout ok">
+<div class="tag">온도 전/후 대비</div>
+<p style="margin:.4em 0">온도 없이 강수만 쓰던 이전 버전의 온난화 시나리오는 <strong>+0.2%</strong>로
+무의미했다. 온도 확보 후 <strong>EDD×2 → −8.6%</strong>, 온난화+가뭄 복합 −8.8%로 근거 있는
+수치가 나온다. 가뭄 단독(−1.3%)이 작아 보이는 건, 모델이 흉작 원인을 대부분 <strong>동반되는
+고온(EDD)</strong>에 귀속시키기 때문 — 현실적 기후변화는 <strong>온난화+가뭄 복합</strong>이다.</p>
 </div>
 
 <footer>
-데이터: ACDC (Purdue PURR, CC-BY), 1981–2015 · 대상: Corn Belt 12개 주 ·
-재현: <code>cd acdc && python3 run_all.py</code> · 온도 파일 미확보(egress 차단)로
-온난화 트랙은 프록시. 그림·수치 전체는 <code>acdc/figures</code>, <code>acdc/outputs</code>.
+데이터: ACDC (Purdue PURR, CC-BY), 1981–2015 · 대상: Corn Belt 12개 주 · 피처: 강수·토양·
+<strong>온도(GDD/EDD)</strong>·연도. 온도는 원본 GDD를 Colab에서 옥수수 기준 GDD·EDD로
+압축해 확보(Mar–Aug 창) · 재현: <code>cd acdc && python3 run_all.py</code> · 그림·수치 전체는
+<code>acdc/figures</code>, <code>acdc/outputs</code>.
 </footer>
 </div>"""
 
