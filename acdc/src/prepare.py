@@ -116,6 +116,13 @@ def build_panel(crop: str = "corn", corn_belt_only: bool = True) -> pd.DataFrame
         dr = pd.read_csv(dpath)[["stco", "year", "dsci_jul"]]
         df = df.merge(dr, on=["stco", "year"], how="left")
 
+    # 7월 토양수분(TerraClimate). 대두에 이득(+0.013, 8월 결정기까지 물이 이어짐),
+    # 옥수수엔 중립(이미 dsci_jul이 포화). VPD는 테스트 결과 도움 안 돼 제외함.
+    tcpath = os.path.join(DATA, "terraclimate_slim.csv")
+    if os.path.exists(tcpath):
+        tc = pd.read_csv(tcpath)[["stco", "year", "soil_jul"]]
+        df = df.merge(tc, on=["stco", "year"], how="left")
+
     if corn_belt_only:
         df = df[df["state"].isin(CORN_BELT_FIPS)].copy()
 
@@ -130,7 +137,7 @@ def build_panel(crop: str = "corn", corn_belt_only: bool = True) -> pd.DataFrame
 def feature_columns(df: pd.DataFrame) -> list[str]:
     """모델 입력 피처 목록. 온도 파일이 있으면 gdd/edd 도 자동 포함."""
     cols = ["ppt"] + SOIL_FEATURES + ["year", "state"]
-    for extra in ("gdd", "edd", "dsci_jul"):
+    for extra in ("gdd", "edd", "dsci_jul", "soil_jul"):
         if extra in df.columns:
             cols.append(extra)
     return cols
