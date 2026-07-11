@@ -109,6 +109,13 @@ def build_panel(crop: str = "corn", corn_belt_only: bool = True) -> pd.DataFrame
     if tpath:
         df = df.merge(build_temperature_features(tpath), on=["stco", "year"], how="left")
 
+    # 가뭄지수(7월 카운티 DSCI). USDM은 2000년부터라 pre-2000은 NaN으로 남고,
+    # HistGradientBoosting이 결측을 native 처리하므로 35년 전체를 그대로 쓴다.
+    dpath = os.path.join(DATA, "drought_slim.csv")
+    if os.path.exists(dpath):
+        dr = pd.read_csv(dpath)[["stco", "year", "dsci_jul"]]
+        df = df.merge(dr, on=["stco", "year"], how="left")
+
     if corn_belt_only:
         df = df[df["state"].isin(CORN_BELT_FIPS)].copy()
 
@@ -123,7 +130,7 @@ def build_panel(crop: str = "corn", corn_belt_only: bool = True) -> pd.DataFrame
 def feature_columns(df: pd.DataFrame) -> list[str]:
     """모델 입력 피처 목록. 온도 파일이 있으면 gdd/edd 도 자동 포함."""
     cols = ["ppt"] + SOIL_FEATURES + ["year", "state"]
-    for extra in ("gdd", "edd"):
+    for extra in ("gdd", "edd", "dsci_jul"):
         if extra in df.columns:
             cols.append(extra)
     return cols
