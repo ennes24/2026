@@ -5,7 +5,11 @@
 // 결과 CSV 컬럼: GEOID(=5자리 FIPS), year, soil(7월 토양수분), vpd(7월 VPD)
 // 참고: 트리 모델은 스케일 불변이라 TerraClimate의 원단위/스케일팩터는 신경 안 써도 됨.
 
-var counties = ee.FeatureCollection('TIGER/2018/Counties');   // 미국 카운티 경계(FIPS=GEOID)
+// 우리 프로젝트가 쓰는 12개 주만 계산 → 전체(3,100개)의 1/3로 줄어 ~3배 빠름
+// (IA IL IN KS MN MO ND NE OH SD TX WI). 전체가 필요하면 .filter(...) 줄을 지우면 됨.
+var STATES = ['19', '17', '18', '20', '27', '29', '38', '31', '39', '46', '48', '55'];
+var counties = ee.FeatureCollection('TIGER/2018/Counties')
+  .filter(ee.Filter.inList('STATEFP', STATES));
 var tc = ee.ImageCollection('IDAHO_EPSCOR/TERRACLIMATE');
 var years = ee.List.sequence(1981, 2015);
 
