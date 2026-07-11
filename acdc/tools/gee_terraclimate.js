@@ -26,7 +26,7 @@ var rows = ee.FeatureCollection(years.map(function (y) {
     scale: 4000
   });
   return stats.map(function (f) { return f.set('year', y); });
-}).flatten());
+})).flatten();   // flatten 은 List 가 아니라 FeatureCollection 메서드로 (연도별 FC들을 하나로 병합)
 
 Export.table.toDrive({
   collection: rows,
