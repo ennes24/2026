@@ -29,14 +29,16 @@ CORN_BELT_FIPS = {19: "IA", 17: "IL", 31: "NE", 27: "MN", 18: "IN", 20: "KS",
 SOIL_FEATURES = ["whc", "om", "spH", "clay", "slope"]
 
 
-def load_raw() -> dict[str, pd.DataFrame]:
+def load_raw(extended: bool = False) -> dict[str, pd.DataFrame]:
     y = pd.read_csv(os.path.join(DATA, "yielddata.csv"))
-    # 2016~2025 확장 수확량(NASS)이 있으면 이어붙임 (ACDC는 2015에서 끊김).
-    recent = os.path.join(DATA, "yield_recent.csv")
-    if os.path.exists(recent):
-        yr = pd.read_csv(recent)                       # stco, year, corn[, soybean]
-        y = (pd.concat([y, yr], ignore_index=True)
-             .drop_duplicates(subset=["stco", "year"], keep="first"))
+    # extended=True 일 때만 2016~2025 NASS 확장 수확량을 이어붙임(기본은 1981-2015 lean).
+    # 파일은 data/pending/ 에 보관해 기본 파이프라인을 오염시키지 않는다.
+    if extended:
+        recent = os.path.join(DATA, "pending", "yield_recent.csv")
+        if os.path.exists(recent):
+            yr = pd.read_csv(recent)                   # stco, year, corn[, soybean]
+            y = (pd.concat([y, yr], ignore_index=True)
+                 .drop_duplicates(subset=["stco", "year"], keep="first"))
     p = pd.read_csv(os.path.join(DATA, "pptMarAug.csv"))
     s = pd.read_csv(os.path.join(DATA, "soil2011.csv"))
     return {"yield": y, "ppt": p, "soil": s}
@@ -102,9 +104,10 @@ def add_county_trend(df: pd.DataFrame, crop: str) -> pd.DataFrame:
     return df
 
 
-def build_panel(crop: str = "corn", corn_belt_only: bool = True) -> pd.DataFrame:
-    """모델·EDA 가 바로 쓰는 최종 패널을 만든다."""
-    raw = load_raw()
+def build_panel(crop: str = "corn", corn_belt_only: bool = True,
+                extended: bool = False) -> pd.DataFrame:
+    """모델·EDA 가 바로 쓰는 최종 패널. extended=True 면 2016~2025(NASS+TerraClimate)까지."""
+    raw = load_raw(extended)
     df = (raw["yield"]
           .merge(raw["ppt"], on=["stco", "year"], how="left")
           .merge(raw["soil"], on="stco", how="left"))
