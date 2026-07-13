@@ -120,8 +120,11 @@ def build_panel(crop: str = "corn", corn_belt_only: bool = True) -> pd.DataFrame
     # 옥수수엔 중립(이미 dsci_jul이 포화). VPD는 테스트 결과 도움 안 돼 제외함.
     tcpath = os.path.join(DATA, "terraclimate_slim.csv")
     if os.path.exists(tcpath):
-        tc = pd.read_csv(tcpath)[["stco", "year", "soil_jul"]]
-        df = df.merge(tc, on=["stco", "year"], how="left")
+        tc = pd.read_csv(tcpath)
+        # 7월 토양수분·강수·최고기온(있는 것만). 강수·최고기온은 옥수수에 이득
+        # (7월 개화기 '언제' 정보 → +0.035), 대두엔 중립(8월 결정기).
+        tccols = ["stco", "year"] + [c for c in ("soil_jul", "pr_jul", "tmmx_jul") if c in tc.columns]
+        df = df.merge(tc[tccols], on=["stco", "year"], how="left")
 
     # 온도 버킷 원자료(있으면). gdd/edd 2개 압축 대신 분포 전체를 피처로.
     bpath = os.path.join(DATA, "gdd_buckets.csv")
@@ -143,7 +146,7 @@ def build_panel(crop: str = "corn", corn_belt_only: bool = True) -> pd.DataFrame
 def feature_columns(df: pd.DataFrame) -> list[str]:
     """모델 입력 피처 목록. 온도 파일이 있으면 gdd/edd 도 자동 포함."""
     cols = ["ppt"] + SOIL_FEATURES + ["year", "state"]
-    for extra in ("gdd", "edd", "dsci_jul", "soil_jul"):
+    for extra in ("gdd", "edd", "dsci_jul", "soil_jul", "pr_jul", "tmmx_jul"):
         if extra in df.columns:
             cols.append(extra)
     # 온도 버킷 원자료가 있으면 개별 버킷도 피처로 추가(gddp0..gddp50)

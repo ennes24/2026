@@ -24,17 +24,17 @@ md("""
 여러 실험(온도·강수·토양·관개·가뭄·토양수분 조합, 선형 vs 트리, SA 튜닝) 중 **테스트 성능이
 가장 높았던 모델 하나**만 골라 처음부터 끝까지 정리한다.
 
-**최종 모델**: HistGradientBoosting (그래디언트 부스팅 트리), 피처 12개
-**데이터**: ACDC(미국 카운티×연도, 1981–2015) + USDM 7월 가뭄 + TerraClimate 7월 토양수분,
+**최종 모델**: HistGradientBoosting (그래디언트 부스팅 트리), 피처 14개
+**데이터**: ACDC(미국 카운티×연도, 1981–2015) + USDM 7월 가뭄 + TerraClimate 7월 토양수분·강수·최고기온,
 Corn Belt 12개 주.
 
 **성능 (3가지 평가 렌즈 — 뒤에서 자세히)**
 
 | 평가 방식 | 무엇을 맞히나 | R² |
 |---|---|---|
-| 랜덤 5-fold CV | 관계 학습력 (쉬움) | **0.855** |
-| GroupKFold(카운티) | 안 본 지역 (중간) | 0.782 |
-| 시간분할(2011–15) | 안 본 미래 예보 (어려움) | 0.626 |
+| 랜덤 5-fold CV | 관계 학습력 (쉬움) | **0.862** |
+| GroupKFold(카운티) | 안 본 지역 (중간) | 0.790 |
+| 시간분할(2011–15) | 안 본 미래 예보 (어려움) | 0.650 |
 
 세 개 다 진짜 예측이며, 점수 차이는 '시험 난이도' 차이다(모델은 하나).
 """)
@@ -52,7 +52,7 @@ md("""
 | `pptMarAug.csv` | 생육기 강수 (mm) | 피처 |
 | `soil2011.csv` | 토양(보수력·유기물·pH 등) | 피처 |
 | `drought_slim.csv` | **7월 가뭄지수 DSCI** (USDM) | 피처(핵심) |
-| `terraclimate_slim.csv` | **7월 토양수분** (TerraClimate) | 피처 |
+| `terraclimate_slim.csv` | **7월 토양수분·강수·최고기온** (TerraClimate) | 피처 |
 """)
 
 code("""
@@ -65,7 +65,7 @@ ppt   = pd.read_csv(f"{D}/pptMarAug.csv")
 soil  = pd.read_csv(f"{D}/soil2011.csv")
 temp  = pd.read_csv(f"{D}/gdd_slim.csv")                       # stco, year, gdd, edd
 drought = pd.read_csv(f"{D}/drought_slim.csv")[["stco","year","dsci_jul"]]
-tc    = pd.read_csv(f"{D}/terraclimate_slim.csv")[["stco","year","soil_jul"]]
+tc    = pd.read_csv(f"{D}/terraclimate_slim.csv")[["stco","year","soil_jul","pr_jul","tmmx_jul"]]  # 7월 토양수분·강수·최고기온
 print("yield", yield_df.shape, "| temp", temp.shape, "| drought", drought.shape, "| terraclimate", tc.shape)
 yield_df.head(3)
 """)
@@ -99,7 +99,7 @@ df[["stco","year","corn","edd","dsci_jul","soil_jul"]].head(3)
 """)
 
 md("""
-## 3. 피처 정의 (12개)
+## 3. 피처 정의 (14개)
 
 | 피처 | 의미 |
 |---|---|
@@ -107,13 +107,14 @@ md("""
 | ppt | 생육기 총강수 |
 | whc, om, spH, clay, slope | 토양: 보수력·유기물·산도·점토·경사 |
 | dsci_jul | **7월 가뭄지수** (수확량 최대 향상 요인) |
-| soil_jul | 7월 토양수분 |
+| soil_jul / pr_jul / tmmx_jul | **7월** 토양수분 / 강수 / 최고기온 (개화기 '언제' 정보) |
 | year | 기술추세 |
 | state | 지역 |
 """)
 
 code("""
-FEATURES = ["gdd","edd","ppt","whc","om","spH","clay","slope","dsci_jul","soil_jul","year","state"]
+FEATURES = ["gdd","edd","ppt","whc","om","spH","clay","slope",
+            "dsci_jul","soil_jul","pr_jul","tmmx_jul","year","state"]
 X = df[FEATURES]
 y = df["corn"]
 groups = df["stco"]
@@ -256,10 +257,10 @@ print("→ edd 계수 음수·강한 유의 = 지역·연도를 통제해도 더
 md("""
 ## 9. 요약
 
-- **최고 모델**: HistGradientBoosting, 피처 12개(온도·강수·토양·7월가뭄·7월토양수분·추세·지역).
-- **성능**: 랜덤 CV **0.855** / GroupKFold 0.782 / 시간분할 **0.626** — 셋 다 진짜 예측, 난이도 차이.
-- **가장 중요한 피처**: 극한고온(edd) + 7월 가뭄(dsci_jul). 데이터 하나 잘 고른 게(7월 가뭄 +0.05)
-  하이퍼파라미터 튜닝(+0.007)보다 훨씬 컸다.
+- **최고 모델**: HistGradientBoosting, 피처 14개(온도·강수·토양·7월가뭄·7월토양수분·강수·최고기온·추세·지역).
+- **성능**: 랜덤 CV **0.862** / GroupKFold 0.790 / 시간분할 **0.650** — 셋 다 진짜 예측, 난이도 차이.
+- **가장 중요한 피처**: 극한고온(edd) + 7월 가뭄(dsci_jul) + 7월 최고기온. 데이터를 잘 고르는 게
+  (7월 가뭄 +0.05, 7월 강수+최고기온 +0.035) 하이퍼파라미터 튜닝(+0.007)보다 훨씬 컸다.
 - **인과 근거**: 고정효과로도 더위 효과가 −1.7 bu/ac/도일(t≈−43)로 유의 → 상관이 아니라 인과.
 - **한계**: 2012급 극단해는 계절총합 피처의 한계로 여전히 과소평가. 월/일 단위 데이터가 다음 지렛대.
 
