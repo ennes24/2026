@@ -146,11 +146,18 @@ def build_panel(crop: str = "corn", corn_belt_only: bool = True) -> pd.DataFrame
 def feature_columns(df: pd.DataFrame) -> list[str]:
     """모델 입력 피처 목록. 온도 파일이 있으면 gdd/edd 도 자동 포함."""
     cols = ["ppt"] + SOIL_FEATURES + ["year", "state"]
-    for extra in ("gdd", "edd", "dsci_jul", "soil_jul", "pr_jul", "tmmx_jul"):
+    buckets = [c for c in df.columns if c.startswith("gddp")]
+    # 온도 버킷 원자료가 있으면 gdd·edd 2개 압축 '대신' 버킷 분포를 쓴다(대체 모드).
+    # 실측: 압축 위에 그냥 더하면 과적합으로 시간분할 하락, 대체하면 소폭 개선(+0.007).
+    # (gdd·edd 컬럼 자체는 df 에 남아 fixed_effects 인과모델에서 계속 사용됨.)
+    if not buckets:
+        for extra in ("gdd", "edd"):
+            if extra in df.columns:
+                cols.append(extra)
+    for extra in ("dsci_jul", "soil_jul", "pr_jul", "tmmx_jul"):
         if extra in df.columns:
             cols.append(extra)
-    # 온도 버킷 원자료가 있으면 개별 버킷도 피처로 추가(gddp0..gddp50)
-    cols += [c for c in df.columns if c.startswith("gddp")]
+    cols += buckets
     return cols
 
 

@@ -1,0 +1,4 @@
+config,random_cv,groupkfold,time_split,n_features
+gdd/edd 2개 압축(기본),0.862,0.791,0.66,14
+버킷 50개 추가(on top),0.864,0.806,0.645,64
+버킷 50개 대체(replace),0.864,0.806,0.667,62
