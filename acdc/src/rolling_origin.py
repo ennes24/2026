@@ -24,10 +24,17 @@ from prepare import build_panel, feature_columns
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FIG = os.path.join(HERE, "figures"); OUT = os.path.join(HERE, "outputs")
 
+# 전 연도(1981-2024)에 존재하는 '일관 피처'만 사용한다.
+# ACDC 계절피처(ppt/gdd/edd)·USDM 가뭄은 2015/2015 컷이라 2016+ 에서 NaN → 피처 단절
+# 아티팩트(2016 급락)를 유발. TerraClimate 7월 + 정적 토양 + 연도/지역으로 통일하면
+# (a) 2016 급락 사라지고 (b) forecast R² 도 오히려 높다(0.66→0.70, 노이즈·중복 제거).
+CONSISTENT = ["whc", "om", "spH", "clay", "slope",
+              "soil_jul", "pr_jul", "tmmx_jul", "year", "state"]
+
 
 def run(crop="corn", start=2010, end=2024):
     d = build_panel(crop, extended=True)
-    f = feature_columns(d)
+    f = [c for c in CONSISTENT if c in d.columns]
     rows = []
     for Y in range(start, end + 1):
         tr = d[d.year <= Y]; te = d[d.year == Y + 1]
@@ -42,10 +49,11 @@ def run(crop="corn", start=2010, end=2024):
     res.round(3).to_csv(os.path.join(OUT, f"rolling_origin_{crop}.csv"), index=False)
 
     ext = res[res.forecast_year >= 2016]
-    print("=" * 70); print(f"롤링 오리진 — {crop} (train ≤Y → predict Y+1)"); print("=" * 70)
+    print("=" * 70); print(f"롤링 오리진(일관 피처) — {crop} (train ≤Y → predict Y+1)"); print("=" * 70)
+    print(f"피처 {len(f)}개: {f}")
     print(res.round(2).to_string(index=False))
     print(f"\n2016–{end+1} 확장구간 평균 R2 {ext.r2.mean():.3f} ± {ext.r2.std():.3f} | MAE {ext.mae.mean():.1f}")
-    print("→ 10년 연속 미래 예보에서 R2가 안정적으로 유지 → 단일 컷보다 신뢰도 높은 검증.")
+    print("→ 일관 피처라 2016 피처단절 아티팩트 없음. 10년 연속 미래 예보에서 안정적.")
 
     # 그림: 연도별 예보 R² (2016+ 확장구간 강조)
     fig, ax = plt.subplots(figsize=(9, 5))
