@@ -11,7 +11,7 @@ var STATES = ['19', '17', '18', '20', '27', '29', '38', '31', '39', '46', '48', 
 var counties = ee.FeatureCollection('TIGER/2018/Counties')
   .filter(ee.Filter.inList('STATEFP', STATES));
 var tc = ee.ImageCollection('IDAHO_EPSCOR/TERRACLIMATE');
-var years = ee.List.sequence(1981, 2015);
+var years = ee.List.sequence(1981, 2024);   // 2016~2024 확장 포함 (TerraClimate는 ~1년 지연)
 
 var rows = ee.FeatureCollection(years.map(function (y) {
   y = ee.Number(y);

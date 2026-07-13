@@ -31,6 +31,12 @@ SOIL_FEATURES = ["whc", "om", "spH", "clay", "slope"]
 
 def load_raw() -> dict[str, pd.DataFrame]:
     y = pd.read_csv(os.path.join(DATA, "yielddata.csv"))
+    # 2016~2025 확장 수확량(NASS)이 있으면 이어붙임 (ACDC는 2015에서 끊김).
+    recent = os.path.join(DATA, "yield_recent.csv")
+    if os.path.exists(recent):
+        yr = pd.read_csv(recent)                       # stco, year, corn[, soybean]
+        y = (pd.concat([y, yr], ignore_index=True)
+             .drop_duplicates(subset=["stco", "year"], keep="first"))
     p = pd.read_csv(os.path.join(DATA, "pptMarAug.csv"))
     s = pd.read_csv(os.path.join(DATA, "soil2011.csv"))
     return {"yield": y, "ppt": p, "soil": s}
@@ -135,8 +141,9 @@ def build_panel(crop: str = "corn", corn_belt_only: bool = True) -> pd.DataFrame
     if corn_belt_only:
         df = df[df["state"].isin(CORN_BELT_FIPS)].copy()
 
-    # 타깃 결측 행은 제외(대체 금지). 강수/토양 결측도 소수 있으면 제외.
-    need = [crop, "ppt"] + SOIL_FEATURES
+    # 타깃·토양(정적, 전연도 존재) 결측만 제외. ppt/gdd 등 ACDC 계절피처는 2016+ 에선
+    # NaN 이지만(2015 컷) 트리가 native 처리하므로 필수요건에서 뺀다(1981-2015엔 영향 0).
+    need = [crop] + SOIL_FEATURES
     df = df.dropna(subset=need).copy()
 
     df = add_county_trend(df, crop)
