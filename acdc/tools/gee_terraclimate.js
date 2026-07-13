@@ -19,7 +19,7 @@ var rows = ee.FeatureCollection(years.map(function (y) {
     .filter(ee.Filter.calendarRange(y, y, 'year'))
     .filter(ee.Filter.calendarRange(7, 7, 'month'))   // 7월 (개화기)
     .first()
-    .select(['soil', 'vpd']);                          // 토양수분, 증기압차
+    .select(['soil', 'vpd', 'pr', 'tmmx']);            // 토양수분, 증기압차, 7월강수, 7월최고기온
   var stats = img.reduceRegions({
     collection: counties,
     reducer: ee.Reducer.mean(),
@@ -32,5 +32,5 @@ Export.table.toDrive({
   collection: rows,
   description: 'terraclimate_july_county',
   fileFormat: 'CSV',
-  selectors: ['GEOID', 'year', 'soil', 'vpd']          // 필요한 컬럼만
+  selectors: ['GEOID', 'year', 'soil', 'vpd', 'pr', 'tmmx']   // 필요한 컬럼만
 });

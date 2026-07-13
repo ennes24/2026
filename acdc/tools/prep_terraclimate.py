@@ -31,22 +31,23 @@ def main(src, dst):
     df = pd.read_csv(src)
     fips_c = _find(df.columns, "geoid", "fips", "stco")
     year_c = _find(df.columns, "year")
-    soil_c = _find(df.columns, "soil", "soilmoisture", "sm")
-    vpd_c = _find(df.columns, "vpd")
+    cols = {"soil_jul": _find(df.columns, "soil", "soilmoisture", "sm"),
+            "vpd_jul":  _find(df.columns, "vpd"),
+            "pr_jul":   _find(df.columns, "pr", "precip", "ppt"),
+            "tmmx_jul": _find(df.columns, "tmmx", "tmax", "tmmax")}
     if not (fips_c and year_c):
         raise SystemExit(f"FIPS/year 컬럼을 못 찾음. 실제 컬럼: {list(df.columns)}")
 
     out = pd.DataFrame()
     out["stco"] = pd.to_numeric(df[fips_c], errors="coerce")
     out["year"] = pd.to_numeric(df[year_c], errors="coerce")
-    if soil_c:
-        out["soil_jul"] = pd.to_numeric(df[soil_c], errors="coerce")
-    if vpd_c:
-        out["vpd_jul"] = pd.to_numeric(df[vpd_c], errors="coerce")
+    for name, src_col in cols.items():
+        if src_col:
+            out[name] = pd.to_numeric(df[src_col], errors="coerce")
     out = out.dropna(subset=["stco", "year"]).copy()
     out["stco"] = out["stco"].astype(int)
     out["year"] = out["year"].astype(int)
-    keep = ["stco", "year"] + [c for c in ("soil_jul", "vpd_jul") if c in out.columns]
+    keep = ["stco", "year"] + [c for c in ("soil_jul", "vpd_jul", "pr_jul", "tmmx_jul") if c in out.columns]
     out = out[keep].round(3)
     out.to_csv(dst, index=False)
     print(f"OK  {src} -> {dst}:  {len(out):,} county-years, cols={keep}")
