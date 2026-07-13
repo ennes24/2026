@@ -123,6 +123,12 @@ def build_panel(crop: str = "corn", corn_belt_only: bool = True) -> pd.DataFrame
         tc = pd.read_csv(tcpath)[["stco", "year", "soil_jul"]]
         df = df.merge(tc, on=["stco", "year"], how="left")
 
+    # 온도 버킷 원자료(있으면). gdd/edd 2개 압축 대신 분포 전체를 피처로.
+    bpath = os.path.join(DATA, "gdd_buckets.csv")
+    if os.path.exists(bpath):
+        bk = pd.read_csv(bpath)
+        df = df.merge(bk, on=["stco", "year"], how="left")
+
     if corn_belt_only:
         df = df[df["state"].isin(CORN_BELT_FIPS)].copy()
 
@@ -140,6 +146,8 @@ def feature_columns(df: pd.DataFrame) -> list[str]:
     for extra in ("gdd", "edd", "dsci_jul", "soil_jul"):
         if extra in df.columns:
             cols.append(extra)
+    # 온도 버킷 원자료가 있으면 개별 버킷도 피처로 추가(gddp0..gddp50)
+    cols += [c for c in df.columns if c.startswith("gddp")]
     return cols
 
 
