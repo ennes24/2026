@@ -5,23 +5,28 @@ ACDC(Agro-Climatic Data by County, 1981–2015) 실데이터로 만든 **예측(
 
 ## ⭐ 바로 실행되는 노트북 (여기부터)
 
-**[`notebooks/best_corn_yield_model.ipynb`](notebooks/best_corn_yield_model.ipynb)** — 데이터 로딩부터
-최고 성능 모델·3가지 평가·인과 근거까지 처음~끝 정리한 **자체 완결형 노트북**. 데이터(약 12MB)가
-저장소에 포함되어 별도 다운로드가 필요 없다.
+### 가장 간단 — 파일 하나만 올리면 끝 (데이터 내장)
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ennes24/2026/blob/claude/corn-yield-optimization-x7qo1o/acdc/notebooks/best_corn_yield_model.ipynb)
+**[`notebooks/corn_yield_model_standalone.ipynb`](notebooks/corn_yield_model_standalone.ipynb)**
+— 데이터가 노트북 안에 **압축 내장**되어 있어, 이 `.ipynb` 파일 **하나만** Colab에 업로드하거나
+Jupyter로 열면 clone·데이터폴더·경로설정 없이 즉시 `런타임 > 모두 실행` 하면 된다.
+필요 라이브러리: `pandas numpy scikit-learn matplotlib`.
 
-- **Colab (원클릭)**: 위 배지 클릭 → `런타임 > 모두 실행`. 첫 코드 셀이 데이터를 자동으로 clone 한다.
-  *(저장소가 public 이어야 clone 이 된다. 한글 그래프가 깨지면 셀 맨 위에서 한 번만
-  `!apt-get -qq install -y fonts-nanum` 실행.)*
-- **로컬**:
-  ```bash
-  git clone https://github.com/ennes24/2026.git
-  cd 2026 && pip install -r acdc/requirements.txt
-  jupyter lab acdc/notebooks/best_corn_yield_model.ipynb
-  ```
+> Colab: `파일 > 노트북 업로드` 로 이 파일만 올리면 됨. GitHub 웹에서 열면 실행된 표·그래프가 그대로 보임.
 
-> GitHub 웹에서 노트북 파일을 열면 **이미 실행된 표·그래프가 그대로 보인다**(출력 임베드됨).
+### 데이터 파일로 함께 (참고)
+
+같은 분석을 저장소의 CSV로 돌리려면 **[`notebooks/best_corn_yield_model.ipynb`](notebooks/best_corn_yield_model.ipynb)**
+(경로 자동탐지, `data/` 사용). 병합 완료된 단일 데이터는
+**[`data/corn_panel_cornbelt_1981_2015.csv`](data/corn_panel_cornbelt_1981_2015.csv)**
+(설명: [`data/corn_panel_README.md`](data/corn_panel_README.md)).
+
+로컬 실행:
+```bash
+git clone https://github.com/ennes24/2026.git
+cd 2026 && pip install -r acdc/requirements.txt
+jupyter lab acdc/notebooks/corn_yield_model_standalone.ipynb
+```
 
 ## 한 번에 실행
 ```bash
