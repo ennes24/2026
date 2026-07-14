@@ -21,6 +21,12 @@ def code(t): CELLS.append(("code", t.strip("\n")))
 md("""
 # 옥수수 수확량 예측 — 최종 최고 성능 모델
 
+> **바로 실행하기.** 이 노트북은 자체 완결형이다. 아래 두 가지 방법 중 하나로 돌린다.
+> - **Colab (원클릭)**: 저장소 README의 "Open in Colab" 배지 클릭 → 첫 코드 셀이 데이터를 자동 clone → `런타임 > 모두 실행`.
+> - **로컬**: `git clone` 후 `pip install -r acdc/requirements.txt` → `acdc/notebooks/` 에서 `jupyter lab`.
+>
+> 데이터(약 12MB, 6개 CSV)는 저장소에 포함되어 있어 별도 다운로드가 필요 없다.
+
 여러 실험(온도·강수·토양·관개·가뭄·토양수분 조합, 선형 vs 트리, SA 튜닝) 중 **테스트 성능이
 가장 높았던 모델 하나**만 골라 처음부터 끝까지 정리한다.
 
@@ -56,9 +62,37 @@ md("""
 """)
 
 code("""
+import os, subprocess
 import pandas as pd, numpy as np, matplotlib.pyplot as plt
+from matplotlib import font_manager as _fm
 plt.rcParams.update({"figure.dpi": 100, "font.size": 11, "axes.grid": True, "grid.alpha": .3})
-D = "../data"
+
+# 그래프 한글 폰트(있으면 등록). Colab에서 깨지면 한 번만: !apt-get -qq install -y fonts-nanum
+for _p in ["/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc",
+           "/usr/share/fonts/truetype/nanum/NanumGothic.ttf",
+           "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc"]:
+    if os.path.exists(_p):
+        _fm.fontManager.addfont(_p)
+        plt.rcParams["font.family"] = _fm.FontProperties(fname=_p).get_name()
+        break
+plt.rcParams["axes.unicode_minus"] = False
+
+# 데이터 경로 자동 탐지 — 로컬(notebooks/·repo루트)에서도, Colab에서도 그대로 돌아간다.
+def _find_data():
+    for p in ["../data", "data", "acdc/data", "/content/2026/acdc/data"]:
+        if os.path.exists(os.path.join(p, "yielddata.csv")):
+            return p
+    return None
+
+D = _find_data()
+if D is None:
+    # Colab 등 repo가 없는 환경: GitHub에서 얕은 clone (repo가 public 이어야 함)
+    print("데이터가 없어 GitHub에서 clone 합니다 …")
+    subprocess.run(["git", "clone", "--depth", "1",
+                    "--branch", "claude/corn-yield-optimization-x7qo1o",
+                    "https://github.com/ennes24/2026.git", "/content/2026"], check=True)
+    D = "/content/2026/acdc/data"
+print("DATA_DIR =", D)
 
 yield_df = pd.read_csv(f"{D}/yielddata.csv")
 ppt   = pd.read_csv(f"{D}/pptMarAug.csv")
