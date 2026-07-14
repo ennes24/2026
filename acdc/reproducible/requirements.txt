@@ -1,0 +1,14 @@
+# 옥수수 수확량 예측 재현 노트북(analysis.ipynb) 실행에 필요한 라이브러리
+# 설치:  pip install -r requirements.txt
+#
+# 이 4개면 충분합니다(딥러닝 프레임워크 불필요). 아래는 검증된 버전이며,
+# 대부분의 최근 버전에서도 동일하게 동작합니다.
+
+numpy>=1.23
+pandas>=1.5
+scikit-learn>=1.4     # HistGradientBoosting 의 quantile loss 사용 (1.1+ 지원)
+matplotlib>=3.6
+
+# 노트북 실행 환경(둘 중 하나)
+jupyter               # 로컬에서 주피터로 열 때
+# (또는 Google Colab 에 업로드하면 별도 설치 없이 실행 가능)
